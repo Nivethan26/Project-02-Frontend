@@ -2,7 +2,7 @@
 import { useState} from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-// import Cookies from 'js-cookie';
+
 
 export default function LoginPage() {
   const router = useRouter();
