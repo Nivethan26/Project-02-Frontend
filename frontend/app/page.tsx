@@ -7,11 +7,14 @@ import CommitmentSection from "@/components/CommitmentSection"
 import ServicesSection from "@/components/ServicesSection"
 import TeamSection from "@/components/TeamSection"
 import TestimonialSection from "@/components/TestimonialSection"
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 
 
 export default function Home() {
   return (
     <div className="bg-gradient-to-br from-blue-50 to-purple-50">
+      <Navbar />
       <HeroSection />
       <FeaturesSection />
       <PromoSection />
@@ -21,6 +24,7 @@ export default function Home() {
       <ServicesSection />
       <TeamSection />
       <TestimonialSection />
+      <Footer />
     </div>
   )
 }

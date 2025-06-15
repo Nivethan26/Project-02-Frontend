@@ -2,6 +2,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import authService from '@/services/auth';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 
 interface FormData {
   firstName: string;
@@ -179,25 +182,27 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      // For demo purposes, we'll just simulate registration
-      // In a real app, you would make an API call here
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
-      // Store user info in localStorage or state management
-      localStorage.setItem('user', JSON.stringify({
-        email: formData.email,
+      const registerData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-      }));
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+        address: formData.address,
+      };
 
-      router.push('/dashboard');
+      await authService.register(registerData);
+      // Clear any existing auth data
+      authService.logout();
+      // Redirect to login page
+      router.push('/login');
     } catch (err: unknown) {
-  if (err instanceof Error) {
-    setError(err.message);
-  } else {
-    setError('An error occurred during registration. Please try again.');
-  }
-}finally {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An error occurred during registration. Please try again.');
+      }
+    } finally {
       setLoading(false);
     }
   };
@@ -211,7 +216,12 @@ export default function RegisterPage() {
   };
 
   return (
+    <div className="min-h-screen bg-gray-50">
+    <Navbar/>
+
+  
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+
       <div className="max-w-md mx-auto">
         <div className="text-center">
           <h2 className="text-3xl font-extrabold text-gray-900">
@@ -437,9 +447,11 @@ export default function RegisterPage() {
                 {loading ? 'Creating account...' : 'Create account'}
               </button>
             </div>
-      </form>
+          </form>
         </div>
       </div>
+      </div>
+      <Footer/>
     </div>
   );
 } 
