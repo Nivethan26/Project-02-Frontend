@@ -13,7 +13,7 @@ export default function ProtectedRoute({ children, role }: ProtectedRouteProps) 
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    const user = localStorage.getItem('user');
+    const user = sessionStorage.getItem('user');
     if (!user) {
       router.push('/login');
       return;

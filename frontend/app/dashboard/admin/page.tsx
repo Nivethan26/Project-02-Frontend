@@ -57,7 +57,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     // Check if user is logged in and is admin
-    const storedUser = localStorage.getItem('user');
+    const storedUser = sessionStorage.getItem('user');
     if (!storedUser) {
       router.push('/login');
       return;
@@ -76,7 +76,7 @@ export default function AdminDashboard() {
 
   const fetchStaffMembers = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const response = await axios.get('http://localhost:8000/api/admin/staff', {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -161,7 +161,7 @@ export default function AdminDashboard() {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       if (isEditMode && selectedStaff) {
         // Update existing staff member
         await axios.put(`http://localhost:8000/api/admin/staff/${selectedStaff._id}`, formData, {
@@ -204,7 +204,7 @@ export default function AdminDashboard() {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this staff member?')) {
       try {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         await axios.delete(`http://localhost:8000/api/admin/staff/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -236,41 +236,25 @@ export default function AdminDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
     router.push('/login');
   };
 
   const handleStaffLogin = async (staff: StaffMember) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const response = await axios.post('http://localhost:8000/api/auth/staff-login', {
         email: staff.email,
         role: staff.role
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-
-      // Store staff session
-      localStorage.setItem('staffToken', response.data.token);
-      localStorage.setItem('staffUser', JSON.stringify(response.data.user));
-
-      // Redirect based on role
-      switch (staff.role) {
-        case 'pharmacist':
-          router.push('/dashboard/pharmacist');
-          break;
-        case 'doctor':
-          router.push('/dashboard/doctor');
-          break;
-        case 'delivery':
-          router.push('/dashboard/delivery');
-          break;
-        default:
-          toast.error('Invalid role');
-      }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to login as staff member');
+      sessionStorage.setItem('staffToken', response.data.token);
+      sessionStorage.setItem('staffUser', JSON.stringify(response.data.user));
+      router.push(`/dashboard/${staff.role}`);
+    } catch (error) {
+      toast.error('Failed to login as staff member');
     }
   };
 
