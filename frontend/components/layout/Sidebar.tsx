@@ -71,8 +71,8 @@ export default function Sidebar({ role }: SidebarProps) {
   const links = role === 'customer' ? getCustomerLinks() : getStaffLinks();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
     router.push('/login');
   };
 

@@ -48,7 +48,7 @@ export default function InventoryPage() {
 
   useEffect(() => {
     // Check if user is logged in and is admin
-    const storedUser = localStorage.getItem('user');
+    const storedUser = sessionStorage.getItem('user');
     if (!storedUser) {
       router.push('/login');
       return;
@@ -67,7 +67,7 @@ export default function InventoryPage() {
 
   const fetchInventory = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const response = await axios.get('http://localhost:8000/api/admin/inventory', {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -94,7 +94,7 @@ export default function InventoryPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
 
       if (isEditMode && selectedItem) {
@@ -149,7 +149,7 @@ export default function InventoryPage() {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         const response = await axios.delete(
           `http://localhost:8000/api/admin/inventory/${id}`,
           { headers: { Authorization: `Bearer ${token}` } }
