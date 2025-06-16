@@ -31,8 +31,8 @@ const authService = {
   async register(data: RegisterData): Promise<AuthResponse> {
     const response = await axios.post(`${API_URL}/auth/register`, data);
     if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      sessionStorage.setItem('token', response.data.token);
+      sessionStorage.setItem('user', JSON.stringify(response.data.user));
     }
     return response.data;
   },
@@ -40,22 +40,22 @@ const authService = {
   async login(email: string, password: string): Promise<AuthResponse> {
     const response = await axios.post(`${API_URL}/auth/login`, { email, password });
     if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      sessionStorage.setItem('token', response.data.token);
+      sessionStorage.setItem('user', JSON.stringify(response.data.user));
     }
     return response.data;
   },
 
   logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
     // Clear any other auth-related data
     sessionStorage.clear();
   },
 
   getCurrentUser(): User | null {
-    const userStr = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
+    const userStr = sessionStorage.getItem('user');
+    const token = sessionStorage.getItem('token');
     
     // Only return user if token exists
     if (userStr && token) {
@@ -70,7 +70,7 @@ const authService = {
   },
 
   getToken() {
-    return localStorage.getItem('token');
+    return sessionStorage.getItem('token');
   },
 
   isAdmin(): boolean {
