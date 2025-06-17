@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import authService from '@/services/auth';
@@ -16,23 +16,6 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    // Check if user is already logged in
-    const user = sessionStorage.getItem('user');
-    if (user) {
-      try {
-        const userData = JSON.parse(user);
-        // Get the return URL from query parameters or default to dashboard
-        const returnUrl = searchParams.get('returnUrl') || `/dashboard/${userData.role}`;
-        router.push(returnUrl);
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        sessionStorage.removeItem('user');
-        sessionStorage.removeItem('token');
-      }
-    }
-  }, [router, searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -87,9 +70,32 @@ export default function LoginPage() {
         throw new Error('Your account is inactive. Please contact support.');
       }
 
-      // Get the return URL from query parameters or default to dashboard
-      const returnUrl = searchParams.get('returnUrl') || `/dashboard/${response.user.role}`;
-      router.push(returnUrl);
+      // Redirect based on user role
+      switch (response.user.role) {
+        case 'admin':
+          router.push('/dashboard/admin');
+          break;
+        case 'customer': {
+          const redirect = searchParams.get('redirect');
+          if (redirect) {
+            router.push(redirect);
+          } else {
+            router.push('/dashboard/customer');
+          }
+          break;
+        }
+        case 'doctor':
+          router.push('/dashboard/doctor');
+          break;
+        case 'pharmacist':
+          router.push('/dashboard/pharmacist');
+          break;
+        case 'delivery':
+          router.push('/dashboard/delivery');
+          break;
+        default:
+          throw new Error('Invalid user role');
+      }
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
