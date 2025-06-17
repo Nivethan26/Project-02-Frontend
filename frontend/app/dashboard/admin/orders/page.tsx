@@ -51,6 +51,9 @@ export default function OrdersPage() {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [newStatus, setNewStatus] = useState<Order['status']>('pending');
   const [orders, setOrders] = useState<Order[]>(mockOrders);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<'approve' | 'cancel' | null>(null);
+  const [confirmMessage, setConfirmMessage] = useState('');
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -64,6 +67,32 @@ export default function OrdersPage() {
     setOrders(prev => prev.map(order => order.id === selectedOrder.id ? { ...order, status: newStatus } : order));
     setSelectedOrder(selectedOrder ? { ...selectedOrder, status: newStatus } : null);
     setShowStatusModal(false);
+  };
+
+  const handleApproveOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setConfirmAction('approve');
+    setConfirmMessage('Are you sure you want to approve this order?');
+    setShowConfirmModal(true);
+  };
+
+  const handleCancelOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setConfirmAction('cancel');
+    setConfirmMessage('Are you sure you want to cancel this order?');
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmAction = () => {
+    if (!selectedOrder) return;
+
+    const newStatus = confirmAction === 'approve' ? 'completed' : 'cancelled';
+    setOrders(prev => prev.map(order => 
+      order.id === selectedOrder.id ? { ...order, status: newStatus } : order
+    ));
+    setShowConfirmModal(false);
+    setConfirmAction(null);
+    setSelectedOrder(null);
   };
 
   return (
@@ -137,12 +166,14 @@ export default function OrdersPage() {
                             <FiEye className="text-blue-600 w-5 h-5" />
                           </button>
                           <button
+                            onClick={() => handleApproveOrder(order)}
                             className="p-2 rounded-full hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-300"
                             aria-label="Approve order"
                           >
                             <FiCheck className="text-green-600 w-5 h-5" />
                           </button>
                           <button
+                            onClick={() => handleCancelOrder(order)}
                             className="p-2 rounded-full hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-300"
                             aria-label="Cancel order"
                           >
@@ -260,6 +291,52 @@ export default function OrdersPage() {
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                     >
                       Update
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Confirmation Modal */}
+            {showConfirmModal && selectedOrder && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-lg font-bold">
+                      {confirmAction === 'approve' ? 'Approve Order' : 'Cancel Order'}
+                    </h2>
+                    <button
+                      onClick={() => {
+                        setShowConfirmModal(false);
+                        setConfirmAction(null);
+                      }}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <FiX className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="mb-4">
+                    <p className="text-gray-700">{confirmMessage}</p>
+                  </div>
+                  <div className="flex justify-end gap-4">
+                    <button
+                      onClick={() => {
+                        setShowConfirmModal(false);
+                        setConfirmAction(null);
+                      }}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                    >
+                      No, Cancel
+                    </button>
+                    <button
+                      onClick={handleConfirmAction}
+                      className={`px-4 py-2 text-white rounded-lg ${
+                        confirmAction === 'approve' 
+                          ? 'bg-green-600 hover:bg-green-700' 
+                          : 'bg-red-600 hover:bg-red-700'
+                      }`}
+                    >
+                      Yes, {confirmAction === 'approve' ? 'Approve' : 'Cancel'}
                     </button>
                   </div>
                 </div>
