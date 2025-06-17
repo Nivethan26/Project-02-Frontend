@@ -8,7 +8,7 @@ export default function ProductPage() {
   const handleUploadClick = () => {
     const user = sessionStorage.getItem('user');
     if (!user) {
-      router.push('/login?returnUrl=/upload-prescription');
+      router.push('/login?redirect=/upload-prescription');
       return;
     }
     try {
@@ -20,7 +20,7 @@ export default function ProductPage() {
       router.push('/upload-prescription');
     } catch (error) {
       console.error('Error parsing user data:', error);
-      router.push('/login?returnUrl=/upload-prescription');
+      router.push('/login?redirect=/upload-prescription');
     }
   };
 
