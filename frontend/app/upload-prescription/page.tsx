@@ -83,7 +83,7 @@ export default function UploadPrescriptionPage() {
   }, [slides.length]);
 
   useEffect(() => {
-    const user = localStorage.getItem("user");
+    const user = sessionStorage.getItem("user");
     if (!user) {
       router.push("/login");
       return;
