@@ -19,6 +19,7 @@ export default function Sidebar({ role }: SidebarProps) {
       { href: '/', label: 'Home', icon: '🏠' },
       { href: '/dashboard/customer', label: 'Dashboard', icon: '📊' },
       { href: '/dashboard/customer/consultations', label: 'Consultations', icon: '👨‍⚕️' },
+      { href: '/dashboard/customer/prescriptions', label: 'My Prescription', icon: '📦' },
       { href: '/dashboard/customer/orders', label: 'My Orders', icon: '📦' },
       { href: '/dashboard/customer/profile', label: 'Profile', icon: '👤' },
     ];
