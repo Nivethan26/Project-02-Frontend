@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { useRef, useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
@@ -129,7 +130,7 @@ export default function UploadPrescriptionPage() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Require at least one prescription image
@@ -193,10 +194,34 @@ export default function UploadPrescriptionPage() {
     }
 
     setSubmitting(true);
-    // TODO: Implement actual upload logic
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      // Create FormData object to handle file uploads
+      const formData = new FormData();
+      
+      // Append all form fields
+      Object.entries(form).forEach(([key, value]) => {
+        formData.append(key, value.toString());
+      });
+      
+      // Append prescription files
+      files.forEach((file) => {
+        formData.append('prescription', file);
+      });
+
+      // Send the request directly to the backend
+      const response = await fetch('http://localhost:8000/api/prescriptions', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload prescription');
+      }
+
+      const data = await response.json();
       showToast('Prescription submitted successfully!', 'success');
+      
+      // Reset form
       setForm({
         name: "",
         email: "",
@@ -214,7 +239,12 @@ export default function UploadPrescriptionPage() {
         agree: false,
       });
       setFiles([]);
-    }, 1500);
+    } catch (error) {
+      console.error('Error uploading prescription:', error);
+      showToast('Failed to upload prescription. Please try again.', 'error');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (isLoading) {
