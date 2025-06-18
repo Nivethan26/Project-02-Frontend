@@ -68,12 +68,29 @@ export default function InventoryPage() {
   const fetchInventory = async () => {
     try {
       const token = sessionStorage.getItem('token');
+      if (!token) {
+        toast.error('Authentication token not found');
+        router.push('/login');
+        return;
+      }
+
       const response = await axios.get('http://localhost:8000/api/admin/inventory', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
       setInventory(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Fetch error:', error);
+      console.error('Error response:', error.response);
+      
+      if (error.response?.status === 401) {
+        toast.error('Authentication failed. Please login again.');
+        router.push('/login');
+        return;
+      }
+      
       toast.error('Failed to fetch inventory');
     }
   };
@@ -93,14 +110,48 @@ export default function InventoryPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form data
+    if (!formData.name.trim() || !formData.description.trim() || !formData.category || !formData.price || !formData.stock) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (Number(formData.price) <= 0) {
+      toast.error('Price must be greater than 0');
+      return;
+    }
+
+    if (Number(formData.stock) < 0) {
+      toast.error('Stock cannot be negative');
+      return;
+    }
+
     try {
       const token = sessionStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
+      if (!token) {
+        toast.error('Authentication token not found');
+        router.push('/login');
+        return;
+      }
+
+      const headers = { 
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+
+      const submitData = {
+        ...formData,
+        price: Number(formData.price),
+        stock: Number(formData.stock)
+      };
+
+      console.log('Submitting data:', submitData);
 
       if (isEditMode && selectedItem) {
         const response = await axios.put(
           `http://localhost:8000/api/admin/inventory/${selectedItem._id}`,
-          formData,
+          submitData,
           { headers }
         );
         if (response.data) {
@@ -112,7 +163,7 @@ export default function InventoryPage() {
       } else {
         const response = await axios.post(
           'http://localhost:8000/api/admin/inventory',
-          formData,
+          submitData,
           { headers }
         );
         if (response.data) {
@@ -124,6 +175,20 @@ export default function InventoryPage() {
       }
     } catch (error: any) {
       console.error('Submit error:', error);
+      console.error('Error response:', error.response);
+      
+      if (error.response?.status === 401) {
+        toast.error('Authentication failed. Please login again.');
+        router.push('/login');
+        return;
+      }
+      
+      if (error.response?.status === 400) {
+        const errorMessage = error.response?.data?.message || 'Invalid data provided';
+        toast.error(errorMessage);
+        return;
+      }
+      
       const errorMessage = error.response?.data?.message || 'Operation failed';
       toast.error(errorMessage);
     }
@@ -150,9 +215,20 @@ export default function InventoryPage() {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
         const token = sessionStorage.getItem('token');
+        if (!token) {
+          toast.error('Authentication token not found');
+          router.push('/login');
+          return;
+        }
+
         const response = await axios.delete(
           `http://localhost:8000/api/admin/inventory/${id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { 
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            } 
+          }
         );
         
         if (response.data) {
@@ -161,6 +237,14 @@ export default function InventoryPage() {
         }
       } catch (error: any) {
         console.error('Delete error:', error);
+        console.error('Error response:', error.response);
+        
+        if (error.response?.status === 401) {
+          toast.error('Authentication failed. Please login again.');
+          router.push('/login');
+          return;
+        }
+        
         const errorMessage = error.response?.data?.message || 'Failed to delete item';
         toast.error(errorMessage);
       }
