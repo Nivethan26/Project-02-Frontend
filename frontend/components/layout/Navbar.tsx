@@ -48,11 +48,11 @@ export default function Navbar() {
         {/* Public Navigation - Only show for customers or on home page */}
         {showPublicNav && (
           <>
-        <Link href="/" className="hover:underline">Home</Link>
-        <Link href="/about" className="hover:underline">About Us</Link>
-        <Link href="/products" className="hover:underline">Products</Link>
-        <Link href="/consultations" className="hover:underline">Services</Link>
-        <Link href="/contact" className="hover:underline">Contact Us</Link>
+        <Link href="/" className="text-black hover:text-blue-600">Home</Link>
+        <Link href="/about" className="text-black hover:text-blue-600">About Us</Link>
+        <Link href="/products" className="text-black hover:text-blue-600">Products</Link>
+        <Link href="/consultations" className="text-black hover:text-blue-600">Services</Link>
+        <Link href="/contact" className="text-black hover:text-blue-600">Contact Us</Link>
           </>
         )}
         
@@ -87,8 +87,8 @@ export default function Navbar() {
           </div>
         ) : (
           <>
-            <Link href="/login" className="hover:underline">Login</Link>
-            <Link href="/register" className="hover:underline">Register</Link>
+            <Link href="/login" className="text-black hover:text-blue-600">Login</Link>
+            <Link href="/register" className="text-black hover:text-blue-600">Register</Link>
           </>
         )}
       </div>
