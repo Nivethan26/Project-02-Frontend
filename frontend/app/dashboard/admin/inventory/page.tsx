@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import Sidebar from '@/components/layout/Sidebar';
+import Image from 'next/image';
 
 interface User {
   id: string;
@@ -63,6 +64,7 @@ export default function InventoryPage() {
 
     setUser(userData);
     fetchInventory();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   const fetchInventory = async () => {
@@ -336,11 +338,14 @@ export default function InventoryPage() {
                 {inventory.map((item) => (
                   <tr key={item._id}>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <img 
-                        src={item.image || '/placeholder.png'} 
-                        alt={item.name}
-                        className="h-12 w-12 object-cover rounded"
-                      />
+                      <div className="h-12 w-12 relative">
+                        <Image
+                          src={item.image || '/placeholder.png'}
+                          alt={item.name}
+                          fill
+                          className="object-cover rounded"
+                        />
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{item.name}</div>
@@ -406,11 +411,14 @@ export default function InventoryPage() {
                     <div className="mt-1 flex items-center">
                       <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden">
                         {imagePreview ? (
-                          <img
-                            src={imagePreview}
-                            alt="Preview"
-                            className="w-full h-full object-cover"
-                          />
+                          <div className="w-full h-full relative">
+                            <Image
+                              src={imagePreview}
+                              alt="Preview"
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-400">
                             No image
