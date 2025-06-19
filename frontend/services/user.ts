@@ -59,6 +59,12 @@ export interface User {
   };
 }
 
+// Add CartItem type
+export interface CartItem {
+  product: string; // product id
+  quantity: number;
+}
+
 const userService = {
   async getAllUsers(): Promise<User[]> {
     try {
@@ -144,22 +150,29 @@ const userService = {
   },
 
   // Cart functions
-  async getCart(): Promise<any[]> {
+  async getCart(): Promise<CartItem[]> {
     try {
       const response = await api.get('/auth/cart');
       return response.data;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching cart:', error);
       throw error;
     }
   },
 
-  async updateCart(cart: any[]): Promise<any[]> {
+  async updateCart(cart: CartItem[]): Promise<CartItem[]> {
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : null;
+    if (!token) {
+      // Don't call the API if not logged in
+      return [];
+    }
     try {
       const response = await api.post('/auth/cart', { cart });
       return response.data;
-    } catch (error) {
-      console.error('Error updating cart:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message !== 'Not authorized, no token') {
+        console.error('Error updating cart:', error);
+      }
       throw error;
     }
   }
