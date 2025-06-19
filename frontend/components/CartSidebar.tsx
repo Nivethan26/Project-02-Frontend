@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
+import { useCart } from '@/context/CartContext';
 
 export interface CartItem {
   id: string;
@@ -14,13 +15,11 @@ export interface CartItem {
 interface CartSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  cartItems: CartItem[];
-  onRemove: (id: string) => void;
-  onQuantityChange: (id: string, newQty: number) => void;
 }
 
-export default function CartSidebar({ isOpen, onClose, cartItems, onRemove, onQuantityChange }: CartSidebarProps) {
+export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   const router = useRouter();
+  const { cartItems, removeFromCart, updateQuantity } = useCart();
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   useEffect(() => {
@@ -86,7 +85,7 @@ export default function CartSidebar({ isOpen, onClose, cartItems, onRemove, onQu
               >
                 <div className="flex items-start gap-3">
                   <button
-                    onClick={() => onRemove(item.id)}
+                    onClick={() => removeFromCart(item.id)}
                     className="p-1.5 hover:bg-red-50 rounded-full transition-colors duration-200 text-red-500 hover:text-red-600 flex-shrink-0 mt-1"
                     title="Remove"
                   >
@@ -101,7 +100,7 @@ export default function CartSidebar({ isOpen, onClose, cartItems, onRemove, onQu
                       <div className="flex items-center gap-2">
                         <button
                           className="w-8 h-8 bg-gradient-to-r from-slate-100 to-slate-200 rounded-lg flex items-center justify-center text-slate-700 hover:from-slate-200 hover:to-slate-300 transition-all duration-200 font-bold text-sm"
-                          onClick={() => onQuantityChange(item.id, item.quantity - 1)}
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
                         >
                           -
                         </button>
@@ -110,7 +109,7 @@ export default function CartSidebar({ isOpen, onClose, cartItems, onRemove, onQu
                         </span>
                         <button
                           className="w-8 h-8 bg-gradient-to-r from-slate-100 to-slate-200 rounded-lg flex items-center justify-center text-slate-700 hover:from-slate-200 hover:to-slate-300 transition-all duration-200 font-bold text-sm"
-                          onClick={() => onQuantityChange(item.id, item.quantity + 1)}
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         >
                           +
                         </button>
