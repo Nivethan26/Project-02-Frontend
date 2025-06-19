@@ -81,12 +81,25 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [cartItems, isLoggedIn, hasHydrated]);
 
-  // Sync cart to backend for logged-in users
+  // Sync cart to backend for logged-in users (only for customers)
   useEffect(() => {
-    if (isLoggedIn && hasHydrated) {
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : null;
+    const userStr = typeof window !== 'undefined' ? sessionStorage.getItem('user') : null;
+    let userRole = null;
+    if (userStr) {
+      try {
+        userRole = JSON.parse(userStr).role;
+      } catch {}
+    }
+    if (isLoggedIn && hasHydrated && token && userRole === 'customer') {
       userService.updateCart(
         cartItems.map(item => ({ product: item.id, quantity: item.quantity }))
-      ).catch(() => {});
+      ).catch((error: any) => {
+        if (error?.message !== 'Not authorized, no token' && error?.message !== 'Server error') {
+          console.error('Error updating cart:', error);
+        }
+        // Otherwise, suppress the error
+      });
     }
   }, [cartItems, isLoggedIn, hasHydrated]);
 
