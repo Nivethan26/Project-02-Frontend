@@ -101,6 +101,21 @@ const authService = {
   isStaff(): boolean {
     const user = this.getCurrentUser();
     return ['admin', 'doctor', 'pharmacist', 'delivery'].includes(user?.role || '');
+  },
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const response = await axios.post(`${API_URL}/auth/forgot-password`, { email });
+    return response.data;
+  },
+
+  async verifyOTP(email: string, otp: string): Promise<{ message: string }> {
+    const response = await axios.post(`${API_URL}/auth/verify-otp`, { email, otp });
+    return response.data;
+  },
+
+  async resetPassword(email: string, otp: string, newPassword: string): Promise<{ message: string }> {
+    const response = await axios.post(`${API_URL}/auth/reset-password`, { email, otp, newPassword });
+    return response.data;
   }
 };
 
