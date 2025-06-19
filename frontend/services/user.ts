@@ -141,6 +141,27 @@ const userService = {
       console.error('Error deleting user:', error);
       throw error;
     }
+  },
+
+  // Cart functions
+  async getCart(): Promise<any[]> {
+    try {
+      const response = await api.get('/auth/cart');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+      throw error;
+    }
+  },
+
+  async updateCart(cart: any[]): Promise<any[]> {
+    try {
+      const response = await api.post('/auth/cart', { cart });
+      return response.data;
+    } catch (error) {
+      console.error('Error updating cart:', error);
+      throw error;
+    }
   }
 };
 
