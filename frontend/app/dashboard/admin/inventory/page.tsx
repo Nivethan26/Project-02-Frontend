@@ -112,7 +112,7 @@ export default function InventoryPage() {
     e.preventDefault();
     
     // Validate form data
-    if (!formData.name.trim() || !formData.description.trim() || !formData.category || !formData.price || !formData.stock) {
+    if (!formData.name.trim() || !formData.category || !formData.price || !formData.stock) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -441,7 +441,6 @@ export default function InventoryPage() {
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      required
                     />
                   </div>
                   <div>
@@ -453,9 +452,23 @@ export default function InventoryPage() {
                       required
                     >
                       <option value="">Select a category</option>
-                      <option value="medicines">Medicines</option>
-                      <option value="equipment">Medical Equipment</option>
-                      <option value="supplies">Medical Supplies</option>
+                      <option value="adult_care">Adult Care</option>
+                      <option value="diabetic_care">Diabetic Care</option>
+                      <option value="hair_care">Hair Care</option>
+                      <option value="ayurveda">Ayurveda</option>
+                      <option value="skin_care">Skin Care</option>
+                      <option value="mother_and_baby_care">Mother & Baby Care</option>
+                      <option value="health_and_wellness">Health & Wellness</option>
+                      <option value="beauty_accessories">Beauty Accessories</option>
+                      <option value="cosmetics">Cosmetics</option>
+                      <option value="food_items">Food Items</option>
+                      <option value="health_monitoring_devices">Health Monitoring Devices</option>
+                      <option value="kids">Kids</option>
+                      <option value="household_remedies">Household Remedies</option>
+                      <option value="pet_care">Pet Care</option>
+                      <option value="beverages">Beverages</option>
+                      <option value="sexual_wellness">Sexual Wellness</option>
+                      <option value="instant_powdered_mixes">Instant Powdered Mixes</option>
                     </select>
                   </div>
                   <div>
