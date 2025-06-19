@@ -157,9 +157,10 @@ export default function ProductPage() {
   // Helper to check login (now from context)
   // const isLoggedIn = () => { ... } // REMOVE
 
-  // Update handleAddToCart to use context
+  // Update handleAddToCart to check sessionStorage directly
   const handleAddToCart = (product: InventoryItem) => {
-    if (!isLoggedIn) {
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : null;
+    if (!token) {
       toast.error('Please login to add items to cart');
       router.push('/login');
       return;
