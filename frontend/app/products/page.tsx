@@ -2,11 +2,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useRouter } from 'next/navigation';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Navbar from '@/components/layout/Navbar';
 import CartSidebar from '@/components/CartSidebar';
 import { toast } from 'react-hot-toast';
+import { useCart } from '@/context/CartContext';
 
 // List of categories (should match sidebar)
 const categories = [
@@ -72,15 +73,6 @@ const priceOptions = [
   { id: 5, label: 'Above LKR 2500' }
 ];
 
-// Define CartItem type
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  quantity: number;
-}
-
 export default function ProductPage() {
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -92,8 +84,8 @@ export default function ProductPage() {
   const [error, setError] = useState<string | null>(null);
   const [originalStock, setOriginalStock] = useState<{[key: string]: number}>({});
 
-  // Cart state
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  // Cart state from context
+  const { cartItems, addToCart, isLoggedIn } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [hasHydrated, setHasHydrated] = useState(false);
 
@@ -135,104 +127,56 @@ export default function ProductPage() {
     fetchProducts();
   }, []);
 
-  // Load cart from sessionStorage on mount (client only)
+  // Remove sessionStorage cart logic and use context
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = sessionStorage.getItem('cart');
-      if (stored) {
-        setCartItems(JSON.parse(stored));
-      }
-      setHasHydrated(true);
-      // Listen for storage events (cart updates in other tabs/pages)
-      const handleStorage = (e: StorageEvent) => {
-        if (e.key === 'cart') {
-          setCartItems(e.newValue ? JSON.parse(e.newValue) : []);
-        }
-      };
-      window.addEventListener('storage', handleStorage);
-      return () => window.removeEventListener('storage', handleStorage);
-    }
+    setHasHydrated(true);
   }, []);
 
-  // Save cart to sessionStorage whenever it changes
-  useEffect(() => {
-    if (hasHydrated) {
-      sessionStorage.setItem('cart', JSON.stringify(cartItems));
-    }
-  }, [cartItems, hasHydrated]);
-
   // Function to update product stock based on cart
-  const updateProductStock = () => {
+  const updateProductStock = useCallback(() => {
     setProducts(prevProducts => {
       return prevProducts.map(product => {
-        // Only reduce stock for non-prescription products in the cart
         if (product.prescription === 'not_required') {
           const cartItem = cartItems.find(item => item.id === product._id);
           const cartQuantity = cartItem ? cartItem.quantity : 0;
           const newStock = originalStock[product._id] - cartQuantity;
           return { ...product, stock: newStock };
         } else {
-          // For prescription-required products, always show original stock
           return { ...product, stock: originalStock[product._id] };
         }
       });
     });
-  };
+  }, [cartItems, originalStock]);
 
-  // Update stock whenever cart changes
   useEffect(() => {
     if (hasHydrated && Object.keys(originalStock).length > 0) {
       updateProductStock();
     }
-  }, [cartItems, hasHydrated, originalStock]);
+  }, [updateProductStock, hasHydrated, originalStock]);
 
-  // Helper to check login
-  const isLoggedIn = () => {
-    if (typeof window !== 'undefined') {
-      return !!sessionStorage.getItem('token');
-    }
-    return false;
-  };
+  // Helper to check login (now from context)
+  // const isLoggedIn = () => { ... } // REMOVE
 
-  // Update handleAddToCart to accept the product type from backend
+  // Update handleAddToCart to use context
   const handleAddToCart = (product: InventoryItem) => {
-    if (!isLoggedIn()) {
+    if (!isLoggedIn) {
+      toast.error('Please login to add items to cart');
       router.push('/login');
       return;
     }
-
-    if (product.stock <= 0) {
-      toast.error('This product is out of stock');
-      return;
-    }
-
-    setCartItems((prev: CartItem[]) => {
-      const existing = prev.find((item) => item.id === product._id);
-      if (existing) {
-        // Check if adding one more would exceed stock
-        if (existing.quantity + 1 > product.stock) {
-          toast.error('Cannot add more of this item - stock limit reached');
-          return prev;
-        }
-        return prev.map((item) =>
-          item.id === product._id ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      } else {
-        const cartItem: CartItem = {
-          id: product._id,
-          name: product.name,
-          price: product.price,
-          image: product.image,
-          quantity: 1,
-        };
-        return [...prev, cartItem];
-      }
+    addToCart({
+      id: product._id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      quantity: 1,
     });
+    toast.success('Added to cart');
   };
 
   // Handle Upload Prescription
   const handleUploadClick = (product: InventoryItem) => {
-    if (!isLoggedIn()) {
+    if (!isLoggedIn) {
       router.push('/login?redirect=/upload-prescription');
       return;
     }
@@ -297,38 +241,6 @@ export default function ProductPage() {
   const handlePriceChange = (option: string) => {
     setSelectedPrice(option);
     setIsPriceDropdownOpen(false);
-  };
-
-  // Add remove handler for CartSidebar
-  const handleRemoveFromCart = (id: string) => {
-    setCartItems(prev => prev.filter(item => item.id !== id));
-  };
-
-  // Add quantity change handler for CartSidebar
-  const handleQuantityChange = (id: string, newQty: number) => {
-    setCartItems((prev) => {
-      const existingItem = prev.find(item => item.id === id);
-      if (!existingItem) return prev;
-
-      if (newQty <= 0) {
-        // Remove item completely
-        return prev.filter((item) => item.id !== id);
-      }
-
-      // Check if the new quantity is valid
-      const originalProductStock = originalStock[id];
-      const cartQuantity = cartItems.find(item => item.id === id)?.quantity || 0;
-      const availableStock = originalProductStock - (cartQuantity - existingItem.quantity);
-      
-      if (newQty > availableStock) {
-        toast.error(`Cannot add more than available stock (${availableStock})`);
-        return prev;
-      }
-
-      return prev.map((item) =>
-        item.id === id ? { ...item, quantity: newQty } : item
-      );
-    });
   };
 
   // In the render, only show cart UI after hydration
@@ -643,9 +555,6 @@ export default function ProductPage() {
       <CartSidebar
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
-        cartItems={cartItems}
-        onRemove={handleRemoveFromCart}
-        onQuantityChange={handleQuantityChange}
       />
     </div>
   );
