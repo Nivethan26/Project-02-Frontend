@@ -59,9 +59,18 @@ export interface User {
   };
 }
 
+// Add Product type
+export interface Product {
+  _id: string;
+  name: string;
+  price: number;
+  image: string;
+  // Add other product fields as necessary
+}
+
 // Add CartItem type
 export interface CartItem {
-  product: string; // product id
+  product: Product; // product object
   quantity: number;
 }
 
@@ -160,7 +169,7 @@ const userService = {
     }
   },
 
-  async updateCart(cart: CartItem[]): Promise<CartItem[]> {
+  async updateCart(cart: {product: string, quantity: number}[]): Promise<CartItem[]> {
     const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : null;
     if (!token) {
       // Don't call the API if not logged in
