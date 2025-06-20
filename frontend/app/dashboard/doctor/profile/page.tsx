@@ -23,7 +23,7 @@ function AnimatedAvatar({ initials }: { initials: string }) {
   );
 }
 
-export default function DeliveryProfilePage() {
+export default function DoctorProfilePage() {
   const [user, setUser] = useState<User & { phone?: string; address?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -97,14 +97,14 @@ export default function DeliveryProfilePage() {
   }
 
   return (
-    <ProtectedRoute role="delivery">
+    <ProtectedRoute role="doctor">
       <div className="flex min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-200 relative overflow-hidden">
         {/* Faint white overlay for extra polish */}
         <div className="absolute inset-0 bg-white/40 pointer-events-none z-0" />
         {/* Blurred background shapes */}
         <div className="absolute -top-10 -left-32 w-96 h-96 bg-blue-400 opacity-30 rounded-full filter blur-3xl z-0" />
         <div className="absolute bottom-0 right-0 w-80 h-80 bg-blue-200 opacity-40 rounded-full filter blur-2xl z-0" />
-        <div className="hidden md:block"><Sidebar role="delivery" /></div>
+        <div className="hidden md:block"><Sidebar role="doctor" /></div>
         <main className="flex-1 md:ml-64 p-0 sm:p-4 flex flex-col items-center justify-start relative z-10">
           {/* Banner/Cover */}
           <div className="w-full h-32 sm:h-48 md:h-64 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-300 relative flex items-end justify-center shadow-lg">
@@ -126,13 +126,13 @@ export default function DeliveryProfilePage() {
               className="absolute right-4 bottom-4 sm:right-8 sm:bottom-8 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-full font-bold shadow-lg transition text-base sm:text-lg flex items-center gap-2 z-30"
               style={{ boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)' }}
             >
-              Manage Account
+                Manage Account
               <Edit className="w-5 h-5" /> <span className="hidden xs:inline">Manage Account</span>
             </button>
           </div>
           <div className="w-full flex justify-center mt-20 sm:mt-24">
             <div className="w-full max-w-lg sm:max-w-2xl md:max-w-3xl bg-white/70 backdrop-blur-2xl rounded-3xl shadow-2xl border border-blue-100 p-4 sm:p-10 md:p-16 md:py-20 animate-fadeInUp relative">
-              <h1 className="text-5xl font-bold text-blue-900 mb-3 text-center tracking-tight font-sans">Delivery Profile</h1>
+              <h1 className="text-5xl font-bold text-blue-900 mb-3 text-center tracking-tight font-sans">Doctor Profile</h1>
               <p className="text-center text-blue-500 mb-10 text-lg font-medium tracking-normal font-sans">View and manage your personal information</p>
               {loading ? (
                 <p className="text-gray-600 text-center">Loading profile details...</p>
