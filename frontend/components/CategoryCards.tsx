@@ -14,7 +14,7 @@ export default function CategoryCards() {
       {categories.map((c, i) => (
         <Card key={i} className="bg-white p-6 shadow-md">
           <CardContent>
-            <h3 className="font-bold text-lg mb-2">{c.title}</h3>
+            <h3 className="text-black font-bold text-lg mb-2">{c.title}</h3>
             <p className="text-sm text-gray-600 mb-4">{c.desc}</p>
             <Button variant="outline"  className="text-blue-600 border-blue-600 hover:bg-blue-50">
               Explore Category →
