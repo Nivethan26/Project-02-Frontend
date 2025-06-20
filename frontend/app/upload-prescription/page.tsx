@@ -302,8 +302,18 @@ export default function UploadPrescriptionPage() {
                 ))}
               </div>
             </div>
-            <button className="w-full bg-teal-500 text-white py-2 rounded font-semibold mb-2">MANAGE PRESCRIPTIONS</button>
-            <button className="w-full border border-gray-400 py-2 rounded font-semibold mb-4">How it works?</button>
+            <div className="mb-8">
+              <button
+                type="button"
+                onClick={() => router.push('/dashboard/customer/prescriptions')}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-lg font-bold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 transform hover:scale-105"
+              >
+                Manage Prescriptions
+              </button>
+            </div>
+            <button className="w-full text-blue-600 bg-blue-100 hover:bg-blue-200 py-2 rounded-lg font-semibold mb-4 transition-colors duration-300">
+              How it works?
+            </button>
             <ul className="list-disc pl-5 space-y-1 text-sm mb-4">
               <li>You can upload up to 5 photos.</li>
               <li>Please upload a full clear photo of your prescription.</li>
@@ -441,10 +451,10 @@ export default function UploadPrescriptionPage() {
               </div>
               <button
                 type="submit"
-                className="w-full bg-teal-500 text-white py-2 rounded font-semibold hover:bg-teal-600 transition"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-lg font-bold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                 disabled={submitting}
               >
-                {submitting ? "Submitting..." : "SUBMIT"}
+                {submitting ? "Submitting..." : "Submit Prescription"}
               </button>
             </form>
           </div>
