@@ -1,6 +1,8 @@
 'use client';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import userService from '../services/user';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
 
 export interface CartItem {
   id: string;
@@ -17,6 +19,8 @@ interface CartContextType {
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   isLoggedIn: boolean;
+  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
+  logout: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -25,6 +29,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hasHydrated, setHasHydrated] = useState(false);
+  const router = useRouter();
 
   // Function to check login and load cart
   const checkLoginAndLoadCart = async () => {
@@ -34,7 +39,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const backendCart = await userService.getCart();
         setCartItems(
-          backendCart.map((item: any) => ({
+          backendCart.map(item => ({
             id: item.product._id,
             name: item.product.name,
             price: item.product.price,
@@ -43,9 +48,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }))
         );
         setIsLoggedIn(true);
-      } catch (e) {
+      } catch (error) {
+        console.error('Failed to load cart:', error);
         setCartItems([]);
-        setIsLoggedIn(true);
+        setIsLoggedIn(false);
       }
     } else {
       const stored = sessionStorage.getItem('cart');
@@ -59,10 +65,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     checkLoginAndLoadCart();
     // Listen for storage events (cross-tab login/logout)
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'token') {
+    const handleStorage = () => {
         checkLoginAndLoadCart();
-      }
     };
     window.addEventListener('storage', handleStorage);
     // Listen for window focus (in case login/logout happens in another tab)
@@ -89,21 +93,46 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (userStr) {
       try {
         userRole = JSON.parse(userStr).role;
-      } catch {}
+      } catch (error) {
+        console.error('Failed to parse user from sessionStorage', error);
+      }
     }
     if (isLoggedIn && hasHydrated && token && userRole === 'customer') {
-      userService.updateCart(
-        cartItems.map(item => ({ product: item.id, quantity: item.quantity }))
-      ).catch((error: any) => {
+      const cartToSync = cartItems.map(item => ({ product: item.id, quantity: item.quantity }));
+      userService.updateCart(cartToSync).catch((error: Error) => {
         if (error?.message !== 'Not authorized, no token' && error?.message !== 'Server error') {
           console.error('Error updating cart:', error);
         }
-        // Otherwise, suppress the error
       });
     }
   }, [cartItems, isLoggedIn, hasHydrated]);
 
+  // Fetch cart from backend whenever isLoggedIn becomes true
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : null;
+    if (token && isLoggedIn) {
+      userService.getCart()
+        .then(backendCart => {
+          const newCartItems = backendCart.map(item => ({
+            id: item.product._id,
+            name: item.product.name,
+            price: item.product.price,
+            image: item.product.image,
+              quantity: item.quantity,
+          }));
+          setCartItems(newCartItems);
+        })
+        .catch(() => setCartItems([]));
+    }
+    setHasHydrated(true);
+  }, [isLoggedIn]);
+
   const addToCart = (item: CartItem) => {
+    if (!isLoggedIn) {
+      toast.error('Please login to add items to cart');
+      router.push('/login');
+      return;
+    }
     setCartItems(prev => {
       const existing = prev.find(ci => ci.id === item.id);
       if (existing) {
@@ -125,8 +154,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCartItems([]);
   };
 
+  const logout = () => {
+    setIsLoggedIn(false);
+    setCartItems([]);
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+  };
+
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQuantity, clearCart, isLoggedIn }}>
+    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQuantity, clearCart, isLoggedIn, setIsLoggedIn, logout }}>
       {children}
     </CartContext.Provider>
   );

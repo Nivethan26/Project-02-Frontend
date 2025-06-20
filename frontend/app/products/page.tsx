@@ -1,7 +1,7 @@
 // app/products/page.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Navbar from '@/components/layout/Navbar';
@@ -75,6 +75,7 @@ const priceOptions = [
 
 export default function ProductPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPrice, setSelectedPrice] = useState('');
@@ -85,7 +86,7 @@ export default function ProductPage() {
   const [originalStock, setOriginalStock] = useState<{[key: string]: number}>({});
 
   // Cart state from context
-  const { cartItems, addToCart, isLoggedIn } = useCart();
+  const { cartItems, addToCart, updateQuantity, removeFromCart, isLoggedIn } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [hasHydrated, setHasHydrated] = useState(false);
 
@@ -157,12 +158,11 @@ export default function ProductPage() {
   // Helper to check login (now from context)
   // const isLoggedIn = () => { ... } // REMOVE
 
-  // Update handleAddToCart to check sessionStorage directly
+  // Update handleAddToCart to redirect back to products page after login
   const handleAddToCart = (product: InventoryItem) => {
-    const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : null;
-    if (!token) {
+    if (!isLoggedIn) {
       toast.error('Please login to add items to cart');
-      router.push('/login');
+      router.push(`/login?redirect=${pathname}`);
       return;
     }
     addToCart({
@@ -175,10 +175,35 @@ export default function ProductPage() {
     toast.success('Added to cart');
   };
 
+  // Handle general upload prescription click
+  const handleGeneralUploadClick = () => {
+    if (!isLoggedIn) {
+      toast.error('Please login to upload a prescription');
+      router.push(`/login?redirect=${pathname}`);
+      return;
+    }
+    router.push('/upload-prescription');
+  };
+
+  // Handle quantity changes for items in the cart
+  const handleQuantityChange = (productId: string, newQuantity: number, stock?: number) => {
+    if (stock !== undefined && newQuantity > stock) {
+      toast.error('Cannot add more than available stock.');
+      return;
+    }
+
+    if (newQuantity <= 0) {
+      removeFromCart(productId);
+      toast.success('Item removed from cart');
+    } else {
+      updateQuantity(productId, newQuantity);
+    }
+  };
+
   // Handle Upload Prescription
   const handleUploadClick = (product: InventoryItem) => {
     if (!isLoggedIn) {
-      router.push('/login?redirect=/upload-prescription');
+      router.push(`/login?redirect=${pathname}`);
       return;
     }
     // Store the product info in sessionStorage for the upload page
@@ -394,34 +419,64 @@ export default function ProductPage() {
               </div>
             </div>
 
-            {/* Cart Section */}
-            <div
-              className="ml-4 cursor-pointer rounded-2xl bg-gradient-to-tr from-white via-blue-50 to-white shadow-xl px-6 py-4 flex items-center gap-4 transition-transform hover:scale-105 border border-blue-100 min-w-[170px]"
-              onClick={() => setIsCartOpen(true)}
-            >
-              <div className="relative flex items-center justify-center">
-                <div className="bg-[#1A5CFF] rounded-full p-2 flex items-center justify-center shadow-md">
-                  <svg
-                    className="h-7 w-7 text-white drop-shadow"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                    />
-                  </svg>
-                  <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white shadow">
-                    {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
-                  </span>
+            <div className="flex items-center">
+              {/* Upload Prescription Button */}
+              <div
+                className="ml-4 cursor-pointer rounded-2xl bg-gradient-to-tr from-green-50 to-white shadow-lg hover:shadow-xl border border-green-200 px-6 py-4 flex items-center gap-4 transition-all duration-300 hover:scale-105"
+                onClick={handleGeneralUploadClick}
+              >
+                <div className="relative flex items-center justify-center">
+                  <div className="bg-white rounded-full p-3 flex items-center justify-center shadow-md">
+                    <svg
+                      className="w-7 h-7 text-green-600 drop-shadow-sm"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <div className="flex flex-col items-start justify-center ml-1">
+                  <span className="font-bold text-lg text-green-800 tracking-tight">Upload</span>
+                  <span className="uppercase text-xs font-semibold tracking-wider text-green-600">Prescription</span>
                 </div>
               </div>
-              <div className="flex flex-col items-start justify-center ml-2">
-                <span className="uppercase text-xs font-semibold tracking-wider text-gray-500 mb-1">Cart</span>
-                <span className="text-lg font-bold text-gray-800 tracking-tight">LKR {cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)}</span>
+
+              {/* Cart Section */}
+              <div
+                className="ml-4 cursor-pointer rounded-2xl bg-gradient-to-tr from-white via-blue-50 to-white shadow-xl px-6 py-4 flex items-center gap-4 transition-transform hover:scale-105 border border-blue-100 min-w-[170px]"
+                onClick={() => setIsCartOpen(true)}
+              >
+                <div className="relative flex items-center justify-center">
+                  <div className="bg-[#1A5CFF] rounded-full p-2 flex items-center justify-center shadow-md">
+                    <svg
+                      className="h-7 w-7 text-white drop-shadow"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                      />
+                    </svg>
+                    <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white shadow">
+                      {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-col items-start justify-center ml-2">
+                  <span className="uppercase text-xs font-semibold tracking-wider text-gray-500 mb-1">Cart</span>
+                  <span className="text-lg font-bold text-gray-800 tracking-tight">LKR {cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -484,72 +539,96 @@ export default function ProductPage() {
 
           {/* Products Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {getSortedAndFilteredProducts().map((product) => (
-              <div key={product._id} className="bg-white rounded-lg shadow-sm overflow-hidden relative">
-                {/* Out of Stock label */}
-                {product.stock === 0 && (
-                  <div className="absolute top-2 left-2 z-10">
-                    <span className="bg-red-600 text-white font-semibold px-2 py-1 text-xs rounded-r">Out of Stock</span>
-                  </div>
-                )}
-                <div className="p-4 flex flex-col h-full">
-                  <div className="flex justify-center mb-4">
-                    <div className="relative w-40 h-40 cursor-pointer" onClick={() => router.push(`/products/detailpage?id=${product._id}`)}>
-                      <Image src={product.image || '/placeholder.png'} alt={product.name} fill className="object-contain" />
+            {getSortedAndFilteredProducts().map((product) => {
+              const cartItem = cartItems.find((item) => item.id === product._id);
+              return (
+                <div key={product._id} className="bg-white rounded-lg shadow-sm overflow-hidden relative flex flex-col">
+                  {/* Out of Stock label */}
+                  {product.stock === 0 && !cartItem && (
+                    <div className="absolute top-2 left-2 z-10">
+                      <span className="bg-red-600 text-white font-semibold px-2 py-1 text-xs rounded-r">Out of Stock</span>
+                    </div>
+                  )}
+                  <div className="p-4 flex flex-col h-full">
+                    <div className="flex justify-center mb-4">
+                      <div className="relative w-40 h-40 cursor-pointer" onClick={() => router.push(`/products/detailpage?id=${product._id}`)}>
+                        <Image src={product.image || '/placeholder.png'} alt={product.name} fill className="object-contain" />
+                      </div>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 min-h-[3.5rem] cursor-pointer" onClick={() => router.push(`/products/detailpage?id=${product._id}`)}>{product.name}</h3>
+                    <p className="text-blue-600 font-bold text-xl mt-2">LKR {product.price.toFixed(2)}</p>
+                    <p className="text-sm text-gray-500 mt-1 mb-4">Stock: {product.stock}</p>
+                    
+                    <div className="mt-auto pt-4">
+                      {cartItem ? (
+                        <div className="flex items-center justify-center w-full rounded-full border border-gray-300">
+                          <button
+                            onClick={() => handleQuantityChange(product._id, cartItem.quantity - 1)}
+                            className="px-4 py-2 text-lg font-bold text-gray-600 hover:bg-gray-100 rounded-l-full transition"
+                          >
+                            -
+                          </button>
+                          <span className="px-5 font-bold text-lg text-gray-800">{cartItem.quantity}</span>
+                          <button
+                            onClick={() => handleQuantityChange(product._id, cartItem.quantity + 1, product.stock)}
+                            disabled={cartItem.quantity >= product.stock}
+                            className="px-4 py-2 text-lg font-bold text-gray-600 hover:bg-gray-100 rounded-r-full transition disabled:text-gray-300 disabled:cursor-not-allowed"
+                          >
+                            +
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() =>
+                            product.prescription === 'required'
+                              ? handleUploadClick(product)
+                              : handleAddToCart(product)
+                          }
+                          className="w-full py-2 px-4 rounded-lg text-white font-medium bg-[#1A5CFF] hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                          disabled={product.stock === 0}
+                        >
+                          {product.prescription === 'required' ? (
+                            <>
+                              Upload Prescription
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                                />
+                              </svg>
+                            </>
+                          ) : (
+                            <>
+                              Add to Cart
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                                />
+                              </svg>
+                            </>
+                          )}
+                        </button>
+                      )}
                     </div>
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 min-h-[3.5rem] cursor-pointer" onClick={() => router.push(`/products/detailpage?id=${product._id}`)}>{product.name}</h3>
-                  <p className="text-blue-600 font-bold text-xl mt-2">LKR {product.price.toFixed(2)}</p>
-                  <p className="text-sm text-gray-500 mt-1 mb-4">Stock: {product.stock}</p>
-                  <button
-                    onClick={() =>
-                      product.prescription === 'required'
-                        ? handleUploadClick(product)
-                        : handleAddToCart(product)
-                    }
-                    className="w-full mt-4 py-2 px-4 rounded-lg text-white font-medium bg-[#1A5CFF] hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-2"
-                    disabled={product.stock === 0}
-                    style={product.stock === 0 ? { backgroundColor: '#aaa', cursor: 'not-allowed' } : {}}
-                  >
-                    {product.prescription === 'required' ? (
-                      <>
-                        Upload Prescription
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                          />
-                        </svg>
-                      </>
-                    ) : (
-                      <>
-                        Add to Cart
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                          />
-                        </svg>
-                      </>
-                    )}
-                  </button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

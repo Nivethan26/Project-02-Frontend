@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useCart } from '@/context/CartContext';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 export default function ViewCartPage() {
   const { cartItems: contextCartItems, removeFromCart, updateQuantity } = useCart();
@@ -72,9 +73,11 @@ export default function ViewCartPage() {
                       className="flex items-center bg-white rounded-2xl shadow p-4 mb-6"
                     >
                       <div className="relative w-20 h-20 flex-shrink-0">
-                        <img
+                        <Image
                           src={item.image}
                           alt={item.name}
+                          width={80}
+                          height={80}
                           className="w-20 h-20 object-cover rounded-xl border"
                         />
                         <button
