@@ -17,7 +17,6 @@ import {
   Stethoscope,
   Pill,
   Activity,
-  Settings,
   Bell
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -75,7 +74,8 @@ export default function Sidebar({ role }: SidebarProps) {
     if (role === 'doctor') {
       links.push(
         { href: '/dashboard/doctor/appointments', label: 'Appointments', icon: Calendar },
-        { href: '/dashboard/doctor/availability', label: 'Availability', icon: Clock }
+        { href: '/dashboard/doctor/availability', label: 'Availability', icon: Clock },
+        { href: '/dashboard/doctor/profile', label: 'Profile', icon: User },
       );
     }
 
@@ -152,10 +152,10 @@ export default function Sidebar({ role }: SidebarProps) {
               <Bell className="w-5 h-5 text-slate-400 group-hover:text-white" />
               <span className="font-medium">Notifications</span>
             </button>
-            <button className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-700 hover:text-white transition-all duration-200 group">
+            {/* <button className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-700 hover:text-white transition-all duration-200 group">
               <Settings className="w-5 h-5 text-slate-400 group-hover:text-white" />
               <span className="font-medium">Settings</span>
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
