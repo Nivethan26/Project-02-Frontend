@@ -544,7 +544,7 @@ export default function POSPage() {
               <div className="lg:col-span-1">
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                   {/* Cart Header */}
-                  <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-400 text-white p-6">
                     <div className="flex items-center justify-between">
                       <div>
                         <h2 className="text-xl font-bold">Billing Cart</h2>
