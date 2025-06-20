@@ -3,18 +3,47 @@ import { Badge } from "@/components/ui/badge"
 
 export default function CommitmentSection() {
   return (
-    <section className="container mx-auto px-4 py-12 grid lg:grid-cols-2 gap-12 items-center">
-      <div className="space-y-8">
-        <Badge className="bg-red-100 text-red-600">Why Us</Badge>
-        <h2 className="text-3xl font-bold">Our Commitment to Quality</h2>
-        <ul className="space-y-4">
-          <li><strong>✔</strong> Wide Product Range</li>
-          <li><strong>✔</strong> Quality Assurance</li>
-          <li><strong>✔</strong> Eco-Friendly Practices</li>
-        </ul>
-      </div>
-      <div>
-        <Image src="/images/pharmacy-commitment.png" alt="Commitment" width={600} height={400} className="rounded-xl" />
+    <section className="bg-white py-16">
+      <div className="max-w-6xl mx-auto px-4 grid lg:grid-cols-2 gap-12 items-center">
+        {/* Left content */}
+        <div className="space-y-6">
+          <Badge className="bg-red-100 text-red-600">Why Us</Badge>
+          <h2 className="text-black text-3xl font-bold">Our Commitment to Quality</h2>
+          <ul className="text-black space-y-6">
+            <li>
+              <h4 className="font-semibold text-lg">✔ Wide Product Range</h4>
+              <p className="text-gray-700 text-sm mt-1">
+                From everyday essentials to specialized medications—we carefully curate a diverse selection
+                to meet all your health and wellness needs.
+              </p>
+            </li>
+            <li>
+              <h4 className="font-semibold text-lg">✔ Quality Assurance</h4>
+              <p className="text-gray-700 text-sm mt-1">
+                Every product on our shelves undergoes strict quality checks, so you receive only trusted,
+                effective, and safe healthcare solutions.
+              </p>
+            </li>
+            <li>
+              <h4 className="font-semibold text-lg">✔ Eco-Friendly Practices</h4>
+              <p className="text-gray-700 text-sm mt-1">
+                We prioritize sustainability—from biodegradable packaging to ethical sourcing—because your health
+                and the planet’s future go hand in hand.
+              </p>
+            </li>
+          </ul>
+        </div>
+
+        {/* Right image */}
+        <div className="flex justify-center">
+          <Image
+            src="/images/about-pharmacy-3.jpg"
+            alt="Commitment"
+            width={300}
+            height={350}
+            className="rounded-xl object-cover"
+          />
+        </div>
       </div>
     </section>
   )
