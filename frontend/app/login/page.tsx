@@ -7,6 +7,7 @@ import authService from '@/services/auth';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Dialog } from '@headlessui/react';
+import { useCart } from '@/context/CartContext';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function LoginPage() {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotError, setForgotError] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState('');
+  const { setIsLoggedIn } = useCart();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -79,6 +81,9 @@ export default function LoginPage() {
       if (response.user.status === 'inactive') {
         throw new Error('Your account is inactive. Please contact support.');
       }
+
+      // Set isLoggedIn to true so CartContext fetches the cart
+      setIsLoggedIn(true);
 
       // Redirect based on user role
       switch (response.user.role) {

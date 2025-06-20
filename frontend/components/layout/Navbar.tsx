@@ -9,7 +9,7 @@ export default function Navbar() {
   const router = useRouter()
   const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
-  const { clearCart } = useCart()
+  const { logout } = useCart()
 
   useEffect(() => {
     // Check for user data on mount and route changes
@@ -32,9 +32,7 @@ export default function Navbar() {
   }, [pathname])
 
   const handleLogout = () => {
-    authService.logout()
-    sessionStorage.removeItem('cart')
-    clearCart()
+    logout()
     setUser(null)
     router.push('/')
   }

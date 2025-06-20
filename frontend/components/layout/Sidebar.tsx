@@ -20,6 +20,7 @@ import {
   Settings,
   Bell
 } from 'lucide-react';
+import { useCart } from '@/context/CartContext';
 
 interface SidebarProps {
   role: string;
@@ -28,6 +29,7 @@ interface SidebarProps {
 export default function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { logout } = useCart();
 
   const isActive = (path: string) => {
     return pathname === path;
@@ -91,8 +93,7 @@ export default function Sidebar({ role }: SidebarProps) {
   const links = role === 'customer' ? getCustomerLinks() : getStaffLinks();
 
   const handleLogout = () => {
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('user');
+    logout();
     router.push('/');
   };
 
