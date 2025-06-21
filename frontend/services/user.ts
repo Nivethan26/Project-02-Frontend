@@ -184,7 +184,17 @@ const userService = {
       }
       throw error;
     }
-  }
+  },
+
+  async submitDoctorAvailability(data: { date: string, slots: string[] }[]): Promise<{ message: string }> {
+    try {
+      const response = await api.post('/doctor/availability', { availability: data });
+      return response.data;
+    } catch (error) {
+      console.error('Error submitting doctor availability:', error);
+      throw error;
+    }
+  },
 };
 
 export default userService; 
