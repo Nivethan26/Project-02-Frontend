@@ -23,7 +23,7 @@ export default function PromoSection() {
               alt="Promo"
               width={120}
               height={150}
-              className="rounded"
+              className="rounded w-auto"
             />
           </div>
         </div>

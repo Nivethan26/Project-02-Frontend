@@ -7,6 +7,7 @@ import Sidebar from '@/components/layout/Sidebar';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import Image from 'next/image';
 
 interface Product {
   _id: string;
@@ -17,7 +18,8 @@ interface Product {
   description: string;
   status: "active" | "inactive";
   prescription: "required" | "not_required";
-  image: string;
+  image?: string;
+  images?: string[];
 }
 
 interface CartItem {
@@ -46,6 +48,15 @@ export default function POSPage() {
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  const getProductImage = (product: Product) => {
+    const imagePath = product.images && product.images.length > 0 ? product.images[0] : product.image;
+    if (!imagePath) {
+      return '/placeholder.png';
+    }
+    const filename = imagePath.replace(/\\/g, '/').split('/').pop();
+    return `http://localhost:8000/uploads/products/${filename}`;
+  };
 
   const fetchProducts = async () => {
     try {
@@ -493,13 +504,16 @@ export default function POSPage() {
                             onClick={() => !isOutOfStock && addToCart(product)}
                           >
                             <div className="flex items-center space-x-3">
-                              <div className={`w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                              <div className={`w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0 relative ${
                                 isOutOfStock ? 'bg-gray-200' : 'bg-white'
                               }`}>
-                                <img
-                                  src={product.image || '/placeholder.png'}
+                                <Image
+                                  src={getProductImage(product)}
                                   alt={product.name}
-                                  className={`w-12 h-12 object-cover rounded ${
+                                  fill
+                                  priority
+                                  sizes="64px"
+                                  className={`object-cover rounded ${
                                     isOutOfStock ? 'grayscale' : ''
                                   }`}
                                 />
@@ -572,11 +586,14 @@ export default function POSPage() {
                         {cart.map((item) => (
                           <div key={item.product._id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                             <div className="flex items-start space-x-3">
-                              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center flex-shrink-0 border">
-                                <img
-                                  src={item.product.image || '/placeholder.png'}
+                              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center flex-shrink-0 border relative">
+                                <Image
+                                  src={getProductImage(item.product)}
                                   alt={item.product.name}
-                                  className="w-8 h-8 object-cover rounded"
+                                  fill
+                                  priority
+                                  sizes="48px"
+                                  className="object-cover rounded"
                                 />
                               </div>
                               <div className="flex-1 min-w-0">
