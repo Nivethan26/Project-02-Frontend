@@ -56,7 +56,8 @@ export default function HeroSection() {
             alt="Pharmacy interior"
             width={600}
             height={400}
-            className="rounded-2xl shadow-2xl"
+            priority
+            className="rounded-2xl shadow-2xl w-auto"
           />
         </div>
       </div>

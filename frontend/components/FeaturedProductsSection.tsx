@@ -35,9 +35,9 @@ export default function FeaturedProductsSection() {
               <Image
                 src={product.image}
                 alt={product.name}
-                layout="fill"
-                objectFit="cover"
-                className="rounded-t-lg"
+                fill
+                className="rounded-t-lg object-cover"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               />
             </div>
             <CardContent className="p-4">

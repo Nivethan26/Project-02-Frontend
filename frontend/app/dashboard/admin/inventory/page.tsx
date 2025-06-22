@@ -25,7 +25,10 @@ interface InventoryItem {
   description: string;
   status: "active" | "inactive";
   prescription: "required" | "not_required";
-  image: string;
+  images?: string[];
+  image?: string; // Legacy field
+  brand?: string;
+  packSize?: string;
 }
 
 export default function InventoryPage() {
@@ -41,11 +44,14 @@ export default function InventoryPage() {
     category: '',
     price: '',
     stock: '',
+    brand: '',
+    packSize: '',
     status: 'active' as 'active' | 'inactive',
     prescription: 'not_required' as 'required' | 'not_required',
-    image: ''
+    images: [] as string[]
   });
-  const [imagePreview, setImagePreview] = useState<string>('');
+  const [imagePreview, setImagePreview] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   useEffect(() => {
     // Check if user is logged in and is admin
@@ -66,6 +72,14 @@ export default function InventoryPage() {
     fetchInventory();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
+
+  const getImageUrl = (imagePath: string | undefined | null): string => {
+    if (!imagePath) {
+      return '/placeholder.png';
+    }
+    const filename = imagePath.replace(/\\/g, '/').split('/').pop();
+    return `http://localhost:8000/uploads/products/${filename}`;
+  };
 
   const fetchInventory = async () => {
     try {
@@ -98,15 +112,13 @@ export default function InventoryPage() {
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setImagePreview(base64String);
-        setFormData(prev => ({ ...prev, image: base64String }));
-      };
-      reader.readAsDataURL(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const fileArray = Array.from(files);
+      setImageFiles(fileArray);
+
+      const previewArray = fileArray.map(file => URL.createObjectURL(file));
+      setImagePreview(previewArray);
     }
   };
 
@@ -114,8 +126,20 @@ export default function InventoryPage() {
     e.preventDefault();
     
     // Validate form data
-    if (!formData.name.trim() || !formData.category || !formData.price || !formData.stock) {
-      toast.error('Please fill in all required fields');
+    if (
+      !formData.name.trim() ||
+      !formData.description.trim() ||
+      !formData.category ||
+      !formData.price ||
+      !formData.stock ||
+      !formData.brand.trim()
+    ) {
+      toast.error('Please fill in all required fields (Pack Size is optional).');
+      return;
+    }
+
+    if (!isEditMode && imageFiles.length === 0) {
+      toast.error('Image is required when adding a new item.');
       return;
     }
 
@@ -137,67 +161,66 @@ export default function InventoryPage() {
         return;
       }
 
+      const postData = new FormData();
+      postData.append('name', formData.name);
+      postData.append('description', formData.description);
+      postData.append('category', formData.category);
+      postData.append('price', formData.price);
+      postData.append('stock', formData.stock);
+      postData.append('brand', formData.brand);
+      postData.append('packSize', formData.packSize);
+      postData.append('status', formData.status);
+      postData.append('prescription', formData.prescription);
+      
+      if (imageFiles.length > 0) {
+        imageFiles.forEach((file) => {
+          postData.append('images', file);
+        });
+      } else if (isEditMode && formData.images.length > 0) {
+        // Keep existing images if no new one is uploaded
+        postData.append('images', JSON.stringify(formData.images));
+      }
+
       const headers = { 
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
       };
-
-      const submitData = {
-        ...formData,
-        price: Number(formData.price),
-        stock: Number(formData.stock)
-      };
-
-      console.log('Submitting data:', submitData);
 
       if (isEditMode && selectedItem) {
-        const response = await axios.put(
+        await axios.put(
           `http://localhost:8000/api/admin/inventory/${selectedItem._id}`,
-          submitData,
+          postData,
           { headers }
         );
-        if (response.data) {
-          toast.success('Item updated successfully');
-          setIsModalOpen(false);
-          fetchInventory();
-          resetForm();
-        }
+        toast.success('Item updated successfully');
       } else {
-        const response = await axios.post(
+        await axios.post(
           'http://localhost:8000/api/admin/inventory',
-          submitData,
+          postData,
           { headers }
         );
-        if (response.data) {
-          toast.success('Item added successfully');
-          setIsModalOpen(false);
-          fetchInventory();
-          resetForm();
-        }
+        toast.success('Item added successfully');
       }
+      setIsModalOpen(false);
+      fetchInventory();
+      resetForm();
     } catch (error: any) {
       console.error('Submit error:', error);
-      console.error('Error response:', error.response);
-      
       if (error.response?.status === 401) {
         toast.error('Authentication failed. Please login again.');
         router.push('/login');
-        return;
-      }
-      
-      if (error.response?.status === 400) {
+      } else if (error.response?.status === 400) {
         const errorMessage = error.response?.data?.message || 'Invalid data provided';
         toast.error(errorMessage);
-        return;
+      } else {
+        const errorMessage = error.response?.data?.message || 'Operation failed';
+        toast.error(errorMessage);
       }
-      
-      const errorMessage = error.response?.data?.message || 'Operation failed';
-      toast.error(errorMessage);
     }
   };
 
   const handleEdit = (item: InventoryItem) => {
     setSelectedItem(item);
+    const existingImages = (item.images && item.images.length > 0) ? item.images : (item.image ? [item.image] : []);
     setFormData({
       name: item.name,
       description: item.description,
@@ -206,9 +229,12 @@ export default function InventoryPage() {
       stock: item.stock.toString(),
       status: item.status,
       prescription: item.prescription,
-      image: item.image
+      images: existingImages,
+      brand: item.brand || '',
+      packSize: item.packSize || '',
     });
-    setImagePreview(item.image);
+    setImagePreview(existingImages.map(img => getImageUrl(img)));
+    setImageFiles([]);
     setIsEditMode(true);
     setIsModalOpen(true);
   };
@@ -262,9 +288,12 @@ export default function InventoryPage() {
       stock: '',
       status: 'active',
       prescription: 'not_required',
-      image: ''
+      images: [],
+      brand: '',
+      packSize: '',
     });
-    setImagePreview('');
+    setImagePreview([]);
+    setImageFiles([]);
     setIsEditMode(false);
     setSelectedItem(null);
   };
@@ -340,16 +369,16 @@ export default function InventoryPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="h-12 w-12 relative">
                         <Image
-                          src={item.image || '/placeholder.png'}
+                          src={getImageUrl(item.images && item.images.length > 0 ? item.images[0] : item.image)}
                           alt={item.name}
                           fill
+                          priority
                           className="object-cover rounded"
                         />
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{item.name}</div>
-                      <div className="text-sm text-gray-500">{item.description}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 capitalize">{item.category}</div>
@@ -407,20 +436,23 @@ export default function InventoryPage() {
               <form onSubmit={handleSubmit}>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Image</label>
+                    <label className="block text-sm font-medium text-gray-700">Image(s)</label>
                     <div className="mt-1 flex items-center">
-                      <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden">
-                        {imagePreview ? (
-                          <div className="w-full h-full relative">
-                            <Image
-                              src={imagePreview}
-                              alt="Preview"
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
+                      <div className="flex flex-wrap gap-2">
+                        {imagePreview.length > 0 ? (
+                          imagePreview.map((preview, index) => (
+                            <div key={index} className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden relative">
+                              <Image
+                                src={preview}
+                                alt={`Preview ${index + 1}`}
+                                fill
+                                priority
+                                className="object-cover"
+                              />
+                            </div>
+                          ))
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                          <div className="w-24 h-24 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-300 rounded-lg">
                             No image
                           </div>
                         )}
@@ -428,6 +460,7 @@ export default function InventoryPage() {
                       <input
                         type="file"
                         accept="image/*"
+                        multiple
                         onChange={handleImageChange}
                         className="ml-4"
                       />
@@ -449,6 +482,7 @@ export default function InventoryPage() {
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      required
                     />
                   </div>
                   <div>
@@ -478,6 +512,25 @@ export default function InventoryPage() {
                       <option value="sexual_wellness">Sexual Wellness</option>
                       <option value="instant_powdered_mixes">Instant Powdered Mixes</option>
                     </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Brand</label>
+                    <input
+                      type="text"
+                      value={formData.brand}
+                      onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Pack Size</label>
+                    <input
+                      type="text"
+                      value={formData.packSize}
+                      onChange={(e) => setFormData({ ...formData, packSize: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Price</label>

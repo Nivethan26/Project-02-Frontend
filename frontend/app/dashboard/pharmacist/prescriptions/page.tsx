@@ -40,7 +40,8 @@ interface InventoryItem {
   description: string;
   status: "active" | "inactive";
   prescription: "required" | "not_required";
-  image: string;
+  image?: string;
+  images?: string[];
 }
 
 interface SelectedProduct {
@@ -58,6 +59,15 @@ function showToast(message: string, type: 'success' | 'error' = 'error') {
     toast.remove();
   }, 3000);
 }
+
+const getProductImage = (product: InventoryItem) => {
+  const imagePath = product.images && product.images.length > 0 ? product.images[0] : product.image;
+  if (!imagePath) {
+    return '/placeholder.png';
+  }
+  const filename = imagePath.replace(/\\/g, '/').split('/').pop();
+  return `http://localhost:8000/uploads/products/${filename}`;
+};
 
 export default function PrescriptionsPage() {
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
@@ -773,6 +783,8 @@ export default function PrescriptionsPage() {
                                   src={`http://localhost:8000${image}`}
                                   alt={`Prescription ${index + 1}`}
                                   fill
+                                  priority
+                                  sizes="(max-width: 768px) 100vw, 33vw"
                                   className="object-cover rounded-lg"
                                 />
                               )}
@@ -903,10 +915,13 @@ export default function PrescriptionsPage() {
                                   </svg>
                                 </div>
                               ) : (
-                                <img
+                                <Image
                                   src={`http://localhost:8000${selectedPrescription.images[currentImageIdx]}`}
                                   alt={`Prescription ${currentImageIdx + 1}`}
+                                  fill
+                                  priority
                                   className="object-contain w-full h-full max-h-[400px] rounded-2xl"
+                                  sizes="(max-width: 768px) 100vw, 50vw"
                                 />
                               )}
                             </div>
@@ -970,132 +985,115 @@ export default function PrescriptionsPage() {
                       </div>
 
                       {/* Products List */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto">
-                        {filteredInventory.map((item) => (
-                          <div key={item._id} className="border rounded-lg p-4">
-                            <div className="flex items-start gap-4">
-                              <div className="w-20 h-20 flex-shrink-0">
-                                <img
-                                  src={item.image || '/placeholder.png'}
-                                  alt={item.name}
-                                  className="w-full h-full object-cover rounded"
-                                />
-                              </div>
-                              <div className="flex-1">
-                                <h4 className="font-medium">{item.name}</h4>
-                                <p className="text-sm text-gray-600">{item.description}</p>
-                                <p className="text-sm font-medium mt-1">Rs. {item.price}</p>
-                                <p className="text-sm text-gray-500">Stock: {item.stock}</p>
-                                {item.stock === 0 && (
-                                  <span className="text-xs text-red-600 font-semibold">Out of Stock</span>
-                                )}
-                                <div className="mt-2 flex items-center gap-2">
-                                  <button
-                                    onClick={() => handleQuantityChange(item, -1)}
-                                    className="px-2 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={item.stock === 0 || !selectedProducts.find(p => p.item._id === item._id) || 
-                                             (selectedProducts.find(p => p.item._id === item._id)?.quantity ?? 0) <= 1}
-                                  >
-                                    -
-                                  </button>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    max={item.stock}
-                                    value={selectedProducts.find(p => p.item._id === item._id)?.quantity || 0}
-                                    onChange={(e) => {
-                                      const value = parseInt(e.target.value) || 0;
-                                      if (value === 0) {
-                                        handleQuantityChange(item, -(selectedProducts.find(p => p.item._id === item._id)?.quantity || 0));
-                                      } else {
-                                        const currentQuantity = selectedProducts.find(p => p.item._id === item._id)?.quantity || 0;
-                                        handleQuantityChange(item, value - currentQuantity);
-                                      }
-                                    }}
-                                    className="w-16 text-center border rounded px-2 py-1 text-sm"
-                                    placeholder="0"
-                                    disabled={item.stock === 0}
-                                  />
-                                  <button
-                                    onClick={() => handleQuantityChange(item, 1)}
-                                    className="px-2 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={item.stock === 0 || (selectedProducts.find(p => p.item._id === item._id)?.quantity ?? 0) >= item.stock}
-                                  >
-                                    +
-                                  </button>
-                                  {item.stock > 0 && item.stock <= 10 && (
-                                    <span className="text-xs text-red-600 font-medium">Low Stock!</span>
-                                  )}
-                                </div>
-                                {!selectedProducts.find(p => p.item._id === item._id) && (
-                                  <button
-                                    onClick={() => handleQuantityChange(item, 1)}
-                                    className="mt-2 w-full px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-                                    disabled={item.stock === 0}
-                                  >
-                                    Quick Add
-                                  </button>
-                                )}
-                                {selectedProducts.find(p => p.item._id === item._id) && (
-                                  <button
-                                    onClick={() => handleQuantityChange(item, -(selectedProducts.find(p => p.item._id === item._id)?.quantity || 0))}
-                                    className="mt-2 w-full px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors"
-                                  >
-                                    Remove
-                                  </button>
-                                )}
-                              </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 py-4 px-2 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 350px)' }}>
+                        {filteredInventory.map((product) => (
+                          <div
+                            key={product._id}
+                            className={`relative flex flex-col items-center justify-between p-4 bg-white border rounded-xl shadow-sm transition-all duration-300 hover:shadow-lg hover:scale-105 ${
+                              product.stock === 0 ? 'opacity-60 bg-gray-100' : ''
+                            }`}
+                          >
+                            <div className="relative w-full h-40 mb-4">
+                              <Image
+                                src={getProductImage(product)}
+                                alt={product.name}
+                                fill
+                                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                                className={`object-cover rounded-lg ${
+                                  product.stock === 0 ? 'grayscale' : ''
+                                }`}
+                              />
+                            </div>
+                            <div className="text-center">
+                              <h4 className="font-semibold text-gray-800 text-sm truncate w-full" title={product.name}>
+                                {product.name}
+                              </h4>
+                              <p className="text-gray-700 font-bold mt-1">Rs. {product.price}</p>
+                            </div>
+                            <div className="w-full mt-3">
+                              {product.stock > 0 ? (
+                                <button
+                                  onClick={() => handleQuantityChange(product, 1)}
+                                  className="w-full px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                >
+                                  Quick Add
+                                </button>
+                              ) : (
+                                <span className="w-full block text-center px-4 py-2 bg-gray-300 text-gray-600 text-sm rounded-lg cursor-not-allowed">
+                                  Out of Stock
+                                </span>
+                              )}
                             </div>
                           </div>
                         ))}
                       </div>
 
                       {/* Order Summary */}
-                      <div className="mt-4 border-t pt-4">
-                        <h4 className="font-medium mb-2">Order Summary</h4>
+                      <div className="mt-6 border-t-2 border-gray-200 pt-6">
+                        <h4 className="text-xl font-bold text-gray-800 mb-4">Order Summary</h4>
                         {selectedProducts.length === 0 ? (
-                          <p className="text-gray-500 text-sm">No items selected</p>
+                          <div className="text-center py-6 bg-gray-50 rounded-lg">
+                            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.5 5.25M12 13.75l-1.5 3M12 13.75l1.5 3M12 13.75V17m-4 4h8m-4-4v4" />
+                            </svg>
+                            <h3 className="mt-2 text-sm font-medium text-gray-900">Your cart is empty</h3>
+                            <p className="mt-1 text-sm text-gray-500">Add products to get started.</p>
+                          </div>
                         ) : (
                           <>
-                            <div className="space-y-2 max-h-32 overflow-y-auto">
-                              {selectedProducts.map((product) => {
-                                const item = inventory.find(i => i._id === product.item._id);
-                                return item ? (
-                                  <div key={product.item._id} className="flex justify-between text-sm items-center">
-                                    <div className="flex-1">
-                                      <span className="font-medium">{item.name}</span>
-                                      <span className="text-gray-500 ml-2">x {product.quantity}</span>
+                            <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+                              {selectedProducts.map(({ item, quantity }) => (
+                                <div key={item._id} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                  <div className="flex items-center gap-3 flex-1">
+                                    <div className="relative w-12 h-12 flex-shrink-0">
+                                      <Image
+                                        src={getProductImage(item)}
+                                        alt={item.name}
+                                        fill
+                                        sizes="48px"
+                                        className="object-cover rounded-md"
+                                      />
                                     </div>
-                                    <div className="text-right">
-                                      <span className="font-medium">Rs. {item.price * product.quantity}</span>
-                                      <div className="text-xs text-gray-500">Rs. {item.price} each</div>
+                                    <div>
+                                      <p className="font-semibold text-sm text-gray-800">{item.name}</p>
+                                      <p className="text-xs text-gray-500">Rs. {item.price.toFixed(2)} each</p>
                                     </div>
                                   </div>
-                                ) : null;
-                              })}
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => handleQuantityChange(item, -1)}
+                                      className="px-2 py-1 border rounded-md text-gray-600 hover:bg-gray-200"
+                                      aria-label="Decrease quantity"
+                                    >
+                                      -
+                                    </button>
+                                    <span className="font-semibold w-8 text-center">{quantity}</span>
+                                    <button
+                                      onClick={() => handleQuantityChange(item, 1)}
+                                      className="px-2 py-1 border rounded-md text-gray-600 hover:bg-gray-200"
+                                      disabled={quantity >= item.stock}
+                                      aria-label="Increase quantity"
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                  <p className="w-20 text-right font-semibold text-gray-800">
+                                    Rs. {(item.price * quantity).toFixed(2)}
+                                  </p>
+                                </div>
+                              ))}
                             </div>
-                            <div className="border-t pt-3 mt-3">
-                              <div className="flex justify-between text-sm mb-1">
-                                <span>Items:</span>
-                                <span>{selectedProducts.length}</span>
-                              </div>
-                              <div className="flex justify-between text-sm mb-1">
-                                <span>Total Quantity:</span>
-                                <span>{selectedProducts.reduce((total, product) => total + product.quantity, 0)}</span>
-                              </div>
-                              <div className="flex justify-between font-medium text-lg border-t pt-2">
+                            <div className="border-t pt-4 mt-4">
+                              <div className="flex justify-between text-lg font-bold">
                                 <span>Total Amount:</span>
-                                <span className="text-blue-600">Rs. {selectedProducts.reduce((total, product) => {
-                                  const item = inventory.find(i => i._id === product.item._id);
-                                  return total + (item ? item.price * product.quantity : 0);
-                                }, 0)}</span>
+                                <span className="text-blue-600">Rs. {calculateTotal().toFixed(2)}</span>
                               </div>
                             </div>
                           </>
                         )}
                       </div>
 
-                      <div className="mt-4 flex justify-end gap-2">
+                      <div className="mt-6 flex justify-end gap-3 border-t pt-6">
                         <button
                           onClick={() => setShowProductSelection(false)}
                           className="px-4 py-2 border rounded hover:bg-gray-100"
@@ -1112,6 +1110,39 @@ export default function PrescriptionsPage() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Rejection Reason Modal */}
+          {showRejectModal && selectedPrescription && (
+            <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center">
+              <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Reason for Rejection</h3>
+                <p className="text-sm text-gray-600 mb-6">
+                  Please provide a clear reason for rejecting the prescription for patient <span className="font-semibold">{selectedPrescription.name}</span>.
+                </p>
+                <textarea
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  className="w-full h-24 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g., Unclear handwriting, invalid medication..."
+                />
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    onClick={() => setShowRejectModal(false)}
+                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleReject(selectedPrescription._id)}
+                    className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                    disabled={!rejectionReason.trim()}
+                  >
+                    Confirm Rejection
+                  </button>
                 </div>
               </div>
             </div>
@@ -1142,40 +1173,9 @@ export default function PrescriptionsPage() {
                       src={`http://localhost:8000${selectedImage}`}
                       alt="Prescription"
                       fill
-                      className="object-contain"
+                      priority
                     />
                   )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Reject Reason Modal */}
-          {showRejectModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-                <h3 className="text-lg font-semibold mb-4">Reject Prescription</h3>
-                <textarea
-                  className="w-full border rounded p-2 mb-4"
-                  rows={3}
-                  placeholder="Enter reason for rejection..."
-                  value={rejectionReason}
-                  onChange={e => setRejectionReason(e.target.value)}
-                />
-                <div className="flex justify-end gap-2">
-                  <button
-                    className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-                    onClick={() => { setShowRejectModal(false); setRejectionReason(''); }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                    onClick={() => selectedPrescription && handleReject(selectedPrescription._id)}
-                    disabled={!selectedPrescription}
-                  >
-                    Submit
-                  </button>
                 </div>
               </div>
             </div>
