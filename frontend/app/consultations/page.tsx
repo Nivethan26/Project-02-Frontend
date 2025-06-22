@@ -1,6 +1,5 @@
 "use client";
 import Image from "next/image";
-import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useRouter } from "next/navigation";
@@ -8,11 +7,13 @@ import { useEffect, useState } from "react";
 
 export default function ServicesPage() {
   const router = useRouter();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null); // any or a specific type
 
   useEffect(() => {
-    const loggedInUser = localStorage.getItem("user");
-    setUser(loggedInUser ? JSON.parse(loggedInUser) : null);
+    if (typeof window !== "undefined") {
+      const loggedInUser = localStorage.getItem("user");
+      setUser(loggedInUser ? JSON.parse(loggedInUser) : null);
+    }
   }, []);
 
   const handleBooking = () => {
@@ -80,7 +81,7 @@ export default function ServicesPage() {
                 alt="Doctor Channeling"
                 width={600}
                 height={400}
-                className="rounded-xl w-full h-auto"
+                className="rounded-xl w-full h-auto object-cover"
               />
             </div>
           </div>
