@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { JSX, useState } from 'react';
 import { notFound, usePathname, useParams } from 'next/navigation';
 import { FaMoneyBillAlt, FaLifeRing, FaCreditCard } from "react-icons/fa";
 import Navbar from "@/components/layout/Navbar";
