@@ -4,8 +4,8 @@ import PromoSection from "@/components/PromoSection"
 import FeaturedProductsSection from "@/components/FeaturedProductsSection"
 import CategoryCards from "@/components/CategoryCards"
 import CommitmentSection from "@/components/CommitmentSection"
-import ServicesSection from "@/components/ServicesSection"
-import TeamSection from "@/components/TeamSection"
+//import ServicesSection from "@/components/ServicesSection"
+//import TeamSection from "@/components/TeamSection"
 import TestimonialSection from "@/components/TestimonialSection"
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -21,8 +21,8 @@ export default function Home() {
       <FeaturedProductsSection />
       <CategoryCards />
       <CommitmentSection />
-      <ServicesSection />
-      <TeamSection />
+      {/*<ServicesSection />
+      <TeamSection />*/}
       <TestimonialSection />
       <Footer />
     </div>

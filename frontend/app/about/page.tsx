@@ -20,10 +20,12 @@ export default function AboutPage() {
           </p>
         </div>
         <div className="flex-1">
-          <img
+          <Image
             src="/images/about-pharmacy-1.jpeg"
             alt="Pharmacy"
-            className="rounded-xl shadow-lg w-full object-cover"
+            width={600}
+            height={400}
+            className="rounded-xl shadow-lg w-full h-auto"
           />
         </div>
       </header>
@@ -63,7 +65,7 @@ export default function AboutPage() {
                 {
                   icon: '🩺',
                   title: 'Patient-First Approach',
-                  desc: 'You’re more than a prescription: we listen, educate, and empower you to make informed health decisions.',
+                  desc: 'You're more than a prescription: we listen, educate, and empower you to make informed health decisions.',
                 },
                 {
                   icon: '✅',
@@ -73,7 +75,7 @@ export default function AboutPage() {
                 {
                   icon: '🌱',
                   title: 'Community Roots',
-                  desc: 'We’re proud to support local initiatives/programs, because your health is our shared priority.',
+                  desc: 'We're proud to support local initiatives/programs, because your health is our shared priority.',
                 },
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-4">
@@ -129,7 +131,7 @@ export default function AboutPage() {
     />
     <h4 className="font-semibold mb-2">02 Home Delivery</h4>
     <p className="text-blue-100 text-sm">
-      Skip the trip! Reliable, contact-free delivery for your family’s medications.
+      Skip the trip! Reliable, contact-free delivery for your family's medications.
     </p>
   </div>
 
@@ -191,7 +193,7 @@ export default function AboutPage() {
           <span className="text-[#e74c3c] font-semibold">Gratitude & Growth</span>
           <h3 className="text-black text-2xl font-bold mt-2 mb-4">Visit us</h3>
           <p className="text-gray-700">
-            We’re honored to be your partners in health—thank you for trusting us. Together, we’ll keep building a healthier, happier community.
+            We're honored to be your partners in health—thank you for trusting us. Together, we'll keep building a healthier, happier community.
           </p>
         </div>
       </section>
