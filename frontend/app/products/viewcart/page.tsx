@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 export default function ViewCartPage() {
-  const { cartItems: contextCartItems, removeFromCart, updateQuantity } = useCart();
+  const { cartItems: contextCartItems, removeFromCart, updateQuantity: updateContextQuantity } = useCart();
   const [cartItems, setCartItems] = useState(contextCartItems);
   const [hasHydrated, setHasHydrated] = useState(false);
   const router = useRouter();
@@ -23,6 +23,32 @@ export default function ViewCartPage() {
       setHasHydrated(true);
     }
   }, [contextCartItems]);
+
+  const getImageUrl = (path: string) => {
+    if (path && !path.startsWith('http')) {
+      return `http://localhost:8000/${path.replace(/\\/g, '/')}`;
+    }
+    return path || '/placeholder.png';
+  };
+
+  const handleLocalQuantityChange = (id: string, newQuantity: number) => {
+    setCartItems(currentItems =>
+      currentItems.map(item =>
+        item.id === id ? { ...item, quantity: newQuantity } : item
+      )
+    );
+  };
+
+  const handleUpdateCart = () => {
+    cartItems.forEach(item => {
+      const contextItem = contextCartItems.find(ci => ci.id === item.id);
+      if (!contextItem || contextItem.quantity !== item.quantity) {
+        updateContextQuantity(item.id, item.quantity);
+      }
+    });
+  };
+
+  const isDirty = JSON.stringify(cartItems) !== JSON.stringify(contextCartItems);
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -74,7 +100,7 @@ export default function ViewCartPage() {
                     >
                       <div className="relative w-20 h-20 flex-shrink-0">
                         <Image
-                          src={item.image}
+                          src={getImageUrl(item.image)}
                           alt={item.name}
                           width={80}
                           height={80}
@@ -96,7 +122,7 @@ export default function ViewCartPage() {
                         <div className="flex items-center gap-2">
                           <button
                             className="w-10 h-10 bg-white border rounded-lg flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors duration-200 font-bold text-xl"
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            onClick={() => handleLocalQuantityChange(item.id, item.quantity - 1)}
                             disabled={item.quantity <= 1}
                           >
                             -
@@ -106,7 +132,7 @@ export default function ViewCartPage() {
                           </span>
                           <button
                             className="w-10 h-10 bg-white border rounded-lg flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors duration-200 font-bold text-xl"
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            onClick={() => handleLocalQuantityChange(item.id, item.quantity + 1)}
                           >
                             +
                           </button>
@@ -119,8 +145,13 @@ export default function ViewCartPage() {
                     </div>
                   ))}
                   <button
-                    className="w-full mt-2 py-3 rounded-xl font-semibold bg-gray-200 text-gray-500 flex items-center justify-center gap-2 cursor-not-allowed"
-                    disabled
+                    className={`w-full mt-2 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 ${
+                      isDirty
+                        ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg'
+                        : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    }`}
+                    disabled={!isDirty}
+                    onClick={handleUpdateCart}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

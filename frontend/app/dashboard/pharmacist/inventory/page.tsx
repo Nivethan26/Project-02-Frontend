@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import Sidebar from '@/components/layout/Sidebar';
+import Image from 'next/image';
 
 interface User {
   id: string;
@@ -25,7 +26,8 @@ interface InventoryItem {
   description: string;
   status: "active" | "inactive";
   prescription: "required" | "not_required";
-  image: string;
+  image?: string;
+  images?: string[];
 }
 
 export default function PharmacistInventoryPage() {
@@ -37,8 +39,48 @@ export default function PharmacistInventoryPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStockLevel, setSelectedStockLevel] = useState('all');
 
+  const getProductImage = (product: InventoryItem) => {
+    const imagePath = product.images && product.images.length > 0 ? product.images[0] : product.image;
+    if (!imagePath) {
+      return '/placeholder.png';
+    }
+    const filename = imagePath.replace(/\\/g, '/').split('/').pop();
+    return `http://localhost:8000/uploads/products/${filename}`;
+  };
+
+  const fetchInventory = useCallback(async () => {
+    try {
+      const token = sessionStorage.getItem('token');
+      if (!token) {
+        toast.error('Authentication token not found');
+        router.push('/login');
+        return;
+      }
+
+      const response = await axios.get('http://localhost:8000/api/staff/inventory', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      setInventory(response.data);
+    } catch (error: any) {
+      console.error('Fetch error:', error);
+      console.error('Error response:', error.response);
+
+      if (error.response?.status === 401) {
+        toast.error('Authentication failed. Please login again.');
+        router.push('/login');
+        return;
+      }
+
+      toast.error('Failed to fetch inventory');
+    } finally {
+      setLoading(false);
+    }
+  }, [router]);
+
   useEffect(() => {
-    // Check if user is logged in and is pharmacist
     const storedUser = sessionStorage.getItem('user');
     if (!storedUser) {
       router.push('/login');
@@ -54,39 +96,7 @@ export default function PharmacistInventoryPage() {
 
     setUser(userData);
     fetchInventory();
-  }, [router]);
-
-  const fetchInventory = async () => {
-    try {
-      const token = sessionStorage.getItem('token');
-      if (!token) {
-        toast.error('Authentication token not found');
-        router.push('/login');
-        return;
-      }
-
-      const response = await axios.get('http://localhost:8000/api/staff/inventory', {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      setInventory(response.data);
-    } catch (error: any) {
-      console.error('Fetch error:', error);
-      console.error('Error response:', error.response);
-      
-      if (error.response?.status === 401) {
-        toast.error('Authentication failed. Please login again.');
-        router.push('/login');
-        return;
-      }
-      
-      toast.error('Failed to fetch inventory');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [router, fetchInventory]);
 
   // Get unique categories for filter
   const categories = Array.from(new Set(inventory.map(item => item.category)));
@@ -340,17 +350,21 @@ export default function PharmacistInventoryPage() {
                       'hover:bg-gray-50'
                     } transition-colors duration-200`}>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <img 
-                          src={item.image || '/placeholder.png'} 
-                          alt={item.name}
-                          className={`h-12 w-12 object-cover rounded ${
-                            isOutOfStock ? 'opacity-50' : ''
-                          }`}
-                        />
+                        <div className="relative h-12 w-12">
+                          <Image 
+                            src={getProductImage(item)}
+                            alt={item.name}
+                            fill
+                            priority
+                            sizes="48px"
+                            className={`object-cover rounded ${
+                              isOutOfStock ? 'opacity-50' : ''
+                            }`}
+                          />
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{item.name}</div>
-                        <div className="text-sm text-gray-500">{item.description}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900 capitalize">{item.category}</div>
