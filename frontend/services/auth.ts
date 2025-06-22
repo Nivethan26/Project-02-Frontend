@@ -101,6 +101,61 @@ const authService = {
   isStaff(): boolean {
     const user = this.getCurrentUser();
     return ['admin', 'doctor', 'pharmacist', 'delivery'].includes(user?.role || '');
+  },
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const response = await axios.post(`${API_URL}/auth/forgot-password`, { email });
+    return response.data;
+  },
+
+  async verifyOTP(email: string, otp: string): Promise<{ message: string }> {
+    const response = await axios.post(`${API_URL}/auth/verify-otp`, { email, otp });
+    return response.data;
+  },
+
+  async resetPassword(email: string, otp: string, newPassword: string): Promise<{ message: string }> {
+    const response = await axios.post(`${API_URL}/auth/reset-password`, { email, otp, newPassword });
+    return response.data;
+  },
+
+  async fetchProfile(): Promise<User & { phone?: string; address?: string }> {
+    const token = this.getToken();
+    if (!token) throw new Error('No auth token');
+    const response = await axios.get(`${API_URL}/auth/profile`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  async updateProfile(data: Partial<RegisterData>): Promise<User & { phone?: string; address?: string }> {
+    const token = this.getToken();
+    if (!token) throw new Error('No auth token');
+    const response = await axios.put(`${API_URL}/auth/profile`, data, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    // Update sessionStorage with new user data
+    sessionStorage.setItem('user', JSON.stringify(response.data));
+    return response.data;
+  },
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
+    const token = this.getToken();
+    if (!token) throw new Error('No auth token');
+    const response = await axios.put(`${API_URL}/auth/change-password`, { currentPassword, newPassword }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  async deleteProfile(): Promise<{ message: string }> {
+    const token = this.getToken();
+    if (!token) throw new Error('No auth token');
+    const response = await axios.delete(`${API_URL}/auth/profile`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    return response.data;
   }
 };
 

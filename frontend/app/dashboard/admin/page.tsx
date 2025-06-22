@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import Sidebar from '@/components/layout/Sidebar';
+import { useCart } from '@/context/CartContext';
 
 interface User {
   id: string;
@@ -54,6 +55,7 @@ export default function AdminDashboard() {
     role: 'pharmacist'
   });
   const [errors, setErrors] = useState<FormErrors>({});
+  const { logout } = useCart();
 
   useEffect(() => {
     // Check if user is logged in and is admin
@@ -236,8 +238,7 @@ export default function AdminDashboard() {
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('user');
+    logout();
     router.push('/login');
   };
 

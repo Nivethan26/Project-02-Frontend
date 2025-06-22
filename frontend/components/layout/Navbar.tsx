@@ -3,11 +3,13 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import authService, { User } from "@/services/auth"
+import { useCart } from '@/context/CartContext'
 
 export default function Navbar() {
   const router = useRouter()
   const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
+  const { logout } = useCart()
 
   useEffect(() => {
     // Check for user data on mount and route changes
@@ -30,7 +32,7 @@ export default function Navbar() {
   }, [pathname])
 
   const handleLogout = () => {
-    authService.logout()
+    logout()
     setUser(null)
     router.push('/')
   }

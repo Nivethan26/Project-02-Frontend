@@ -59,6 +59,21 @@ export interface User {
   };
 }
 
+// Add Product type
+export interface Product {
+  _id: string;
+  name: string;
+  price: number;
+  image: string;
+  // Add other product fields as necessary
+}
+
+// Add CartItem type
+export interface CartItem {
+  product: Product; // product object
+  quantity: number;
+}
+
 const userService = {
   async getAllUsers(): Promise<User[]> {
     try {
@@ -141,7 +156,45 @@ const userService = {
       console.error('Error deleting user:', error);
       throw error;
     }
-  }
+  },
+
+  // Cart functions
+  async getCart(): Promise<CartItem[]> {
+    try {
+      const response = await api.get('/auth/cart');
+      return response.data;
+    } catch (error: unknown) {
+      console.error('Error fetching cart:', error);
+      throw error;
+    }
+  },
+
+  async updateCart(cart: {product: string, quantity: number}[]): Promise<CartItem[]> {
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : null;
+    if (!token) {
+      // Don't call the API if not logged in
+      return [];
+    }
+    try {
+      const response = await api.post('/auth/cart', { cart });
+      return response.data;
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message !== 'Not authorized, no token') {
+        console.error('Error updating cart:', error);
+      }
+      throw error;
+    }
+  },
+
+  async submitDoctorAvailability(data: { date: string, slots: string[] }[]): Promise<{ message: string }> {
+    try {
+      const response = await api.post('/doctor/availability', { availability: data });
+      return response.data;
+    } catch (error) {
+      console.error('Error submitting doctor availability:', error);
+      throw error;
+    }
+  },
 };
 
 export default userService; 
