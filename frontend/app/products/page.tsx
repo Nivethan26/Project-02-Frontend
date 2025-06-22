@@ -58,10 +58,12 @@ interface InventoryItem {
   description: string;
   category: string;
   price: number;
+  packPrice?: number;
   stock: number;
   status: 'active' | 'inactive';
   prescription: 'required' | 'not_required';
-  image: string;
+  image?: string;
+  images?: string[];
 }
 
 // Filter options
@@ -92,6 +94,16 @@ export default function ProductPage() {
 
   // Add this at the top of your component:
   const [isPriceDropdownOpen, setIsPriceDropdownOpen] = useState(false);
+
+  // Helper function to get the correct image URL
+  const getProductImage = (product: InventoryItem) => {
+    const imagePath = product.images && product.images.length > 0 ? product.images[0] : product.image;
+    if (!imagePath) {
+      return '/placeholder.png';
+    }
+    const filename = imagePath.replace(/\\/g, '/').split('/').pop();
+    return `http://localhost:8000/uploads/products/${filename}`;
+  };
 
   // Fetch products from backend
   useEffect(() => {
@@ -169,7 +181,7 @@ export default function ProductPage() {
       id: product._id,
       name: product.name,
       price: product.price,
-      image: product.image,
+      image: getProductImage(product),
       quantity: 1,
     });
     toast.success('Added to cart');
@@ -539,7 +551,7 @@ export default function ProductPage() {
 
           {/* Products Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {getSortedAndFilteredProducts().map((product) => {
+            {getSortedAndFilteredProducts().map((product, index) => {
               const cartItem = cartItems.find((item) => item.id === product._id);
               return (
                 <div key={product._id} className="bg-white rounded-lg shadow-sm overflow-hidden relative flex flex-col">
@@ -551,13 +563,33 @@ export default function ProductPage() {
                   )}
                   <div className="p-4 flex flex-col h-full">
                     <div className="flex justify-center mb-4">
-                      <div className="relative w-40 h-40 cursor-pointer" onClick={() => router.push(`/products/detailpage?id=${product._id}`)}>
-                        <Image src={product.image || '/placeholder.png'} alt={product.name} fill className="object-contain" />
+                      <div className="relative h-48 w-full overflow-hidden rounded-t-lg bg-gray-200">
+                        {product.stock === 0 && (
+                          <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-full z-10">
+                            Out of Stock
+                          </div>
+                        )}
+                        <Image
+                          src={getProductImage(product)}
+                          alt={product.name}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                          priority={index < 4} // Prioritize loading for the first few images
+                        />
                       </div>
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 min-h-[3.5rem] cursor-pointer" onClick={() => router.push(`/products/detailpage?id=${product._id}`)}>{product.name}</h3>
-                    <p className="text-blue-600 font-bold text-xl mt-2">LKR {product.price.toFixed(2)}</p>
-                    <p className="text-sm text-gray-500 mt-1 mb-4">Stock: {product.stock}</p>
+                    <h3 className="text-base font-semibold text-gray-800 truncate" title={product.name}>{product.name}</h3>
+                    {product.packPrice ? (
+                      <p className="text-blue-600 font-bold text-xl mt-2">
+                        LKR {product.packPrice.toFixed(2)}
+                      </p>
+                    ) : (
+                      <p className="text-blue-600 font-bold text-xl mt-2">
+                        LKR {product.price.toFixed(2)}
+                      </p>
+                    )}
+                    <p className="text-sm text-gray-500 mt-1">Stock: {product.stock > 0 ? product.stock : 'Out of Stock'}</p>
                     
                     <div className="mt-auto pt-4">
                       {cartItem ? (

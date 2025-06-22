@@ -235,6 +235,7 @@ export default function CustomerPrescriptionsPage() {
                               src={`http://localhost:8000${image}`}
                               alt={`Prescription ${index + 1}`}
                               fill
+                              priority
                               className="object-contain"
                             />
                           )}
@@ -256,6 +257,7 @@ export default function CustomerPrescriptionsPage() {
                   alt="Prescription"
                   width={800}
                   height={600}
+                  priority
                   className="object-contain"
                 />
                 <button
