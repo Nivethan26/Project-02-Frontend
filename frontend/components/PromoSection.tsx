@@ -45,7 +45,7 @@ export default function PromoSection() {
           {/* Bottom row */}
           <div className="mt-auto flex items-center justify-between">
             <h3 className="text-6xl font-bold">15%</h3>
-            <Button className="bg-gray-100 text-black hover:bg-black px-6 py-2 text-sm font-semibold border border-white">
+            <Button className="bg-black-100 text-black hover:bg-black px-6 py-2 text-sm font-semibold border border-white">
   Shop Now
 </Button>
           </div>
