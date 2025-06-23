@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
@@ -8,6 +9,7 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 import Sidebar from '@/components/layout/Sidebar';
 import { useCart } from '@/context/CartContext';
+import Image from 'next/image';
 
 interface User {
   id: string;
@@ -26,6 +28,8 @@ interface StaffMember {
   phone: string;
   address: string;
   status: 'active' | 'inactive';
+  speciality?: string;
+  profilePhoto?: string;
 }
 
 interface FormErrors {
@@ -38,6 +42,18 @@ interface FormErrors {
   role?: string;
 }
 
+interface StaffFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phone: string;
+  address: string;
+  role: 'pharmacist' | 'doctor' | 'delivery';
+  profilePhoto: File | null;
+  speciality: string;
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -45,17 +61,20 @@ export default function AdminDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<StaffFormData>({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
     phone: '',
     address: '',
-    role: 'pharmacist'
+    role: 'pharmacist',
+    profilePhoto: null,
+    speciality: ''
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const { logout } = useCart();
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if user is logged in and is admin
@@ -164,17 +183,25 @@ export default function AdminDashboard() {
 
     try {
       const token = sessionStorage.getItem('token');
-      if (isEditMode && selectedStaff) {
-        // Update existing staff member
-        await axios.put(`http://localhost:8000/api/admin/staff/${selectedStaff._id}`, formData, {
-          headers: { Authorization: `Bearer ${token}` }
+      let submitData: any = formData;
+      let headers: any = { Authorization: `Bearer ${token}` };
+      let isMultipart = !!formData.profilePhoto || (formData.role === 'doctor' && formData.speciality);
+      if (isMultipart) {
+        submitData = new FormData();
+        Object.entries(formData).forEach(([key, value]) => {
+          if (key === 'profilePhoto' && value) {
+            submitData.append('profilePhoto', value as File);
+          } else if (value !== undefined && value !== null) {
+            submitData.append(key, value as string);
+          }
         });
+        headers['Content-Type'] = 'multipart/form-data';
+      }
+      if (isEditMode && selectedStaff) {
+        await axios.put(`http://localhost:8000/api/admin/staff/${selectedStaff._id}`, submitData, { headers });
         toast.success('Staff member updated successfully');
       } else {
-        // Create new staff member
-        await axios.post('http://localhost:8000/api/admin/staff', formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.post('http://localhost:8000/api/admin/staff', submitData, { headers });
         toast.success('Staff member created successfully');
       }
       setIsModalOpen(false);
@@ -194,11 +221,18 @@ export default function AdminDashboard() {
       firstName: staff.firstName,
       lastName: staff.lastName,
       email: staff.email,
-      password: '', // Don't set password when editing
+      password: '',
       phone: staff.phone,
       address: staff.address,
-      role: staff.role
+      role: staff.role,
+      profilePhoto: null,
+      speciality: staff.speciality || ''
     });
+    if (staff.profilePhoto) {
+      setPhotoPreview(`http://localhost:8000/${staff.profilePhoto.replace(/^uploads\//, 'uploads/')}`);
+    } else {
+      setPhotoPreview(null);
+    }
     setIsEditMode(true);
     setIsModalOpen(true);
   };
@@ -226,8 +260,11 @@ export default function AdminDashboard() {
       password: '',
       phone: '',
       address: '',
-      role: 'pharmacist'
+      role: 'pharmacist',
+      profilePhoto: null,
+      speciality: ''
     });
+    setPhotoPreview(null);
   };
 
   const handleModalClose = () => {
@@ -235,6 +272,7 @@ export default function AdminDashboard() {
     setIsEditMode(false);
     setSelectedStaff(null);
     resetForm();
+    setPhotoPreview(null);
   };
 
   const handleLogout = () => {
@@ -348,134 +386,187 @@ export default function AdminDashboard() {
 
       {/* Add/Edit Staff Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                {isEditMode ? 'Edit Staff Member' : 'Add New Staff'}
-              </h3>
-              <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'linear-gradient(120deg, rgba(37,99,235,0.7) 0%, rgba(255,255,255,0.7) 100%)' }}>
+          <div className="relative max-w-lg w-full mx-auto rounded-2xl shadow-2xl bg-white" style={{ borderTop: '6px solid #2563eb' }}>
+            {/* Blue accent bar */}
+            <div className="w-full h-2 rounded-t-2xl" style={{ background: 'linear-gradient(90deg, #2563eb 0%, #60a5fa 100%)' }} />
+            <div className="p-6 sm:p-8">
+              <div className="flex flex-col items-center mb-4">
+                <h3 className="text-3xl font-bold text-gray-900 mb-1 tracking-tight">{isEditMode ? 'Edit Staff Member' : 'Add New Staff'}</h3>
+                <p className="text-gray-500 text-base text-center">Fill in the details below to {isEditMode ? 'update' : 'add'} a staff member.</p>
+              </div>
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Profile Photo Section */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">First Name</label>
+                  <label className="block text-base font-medium text-gray-700 mb-2">Profile Photo (optional)</label>
+                  <div className="flex justify-center">
+                    <div
+                      style={{
+                        width: 96,
+                        height: 96,
+                        border: '2px dashed #2563eb',
+                        background: '#f3f6fb',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: 16,
+                        overflow: 'hidden',
+                        marginBottom: 8
+                      }}
+                    >
+                      {photoPreview ? (
+                        <Image
+                          src={photoPreview}
+                          alt="Profile Preview"
+                          width={96}
+                          height={96}
+                          style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                        />
+                      ) : (
+                        <span className="text-blue-400 text-3xl">+</span>
+                      )}
+                    </div>
+                  </div>
                   <input
-                    type="text"
-                    required
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.firstName ? 'border-red-300' : 'border-gray-300'
-                    }`}
+                    type="file"
+                    accept="image/*"
+                    onChange={e => {
+                      const file = e.target.files && e.target.files.length > 0 ? e.target.files[0] : null;
+                      setFormData({ ...formData, profilePhoto: file });
+                      if (file) {
+                        setPhotoPreview(URL.createObjectURL(file));
+                      } else if (selectedStaff && selectedStaff.profilePhoto) {
+                        setPhotoPreview(`http://localhost:8000/${selectedStaff.profilePhoto.replace(/^uploads\//, 'uploads/')}`);
+                      } else {
+                        setPhotoPreview(null);
+                      }
+                    }}
+                    className="mt-2 block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none"
                   />
-                  {errors.firstName && (
-                    <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
-                  )}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Last Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.lastName ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  />
-                  {errors.lastName && (
-                    <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Email</label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.email ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  />
-                  {errors.email && (
-                    <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-                  )}
-                </div>
-                {!isEditMode && (
+                <hr className="my-2 border-gray-200" />
+                {/* Main Form Fields: Responsive grid, 1 col on mobile, 2 col on md+ */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Password</label>
+                    <label className="block text-base font-medium text-gray-700 mb-1">First Name</label>
                     <input
-                      type="password"
+                      type="text"
                       required
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.password ? 'border-red-300' : 'border-gray-300'
-                      }`}
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.firstName ? 'border-red-300' : ''}`}
                     />
-                    {errors.password && (
-                      <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                    {errors.firstName && (
+                      <p className="mt-1 text-xs text-red-600">{errors.firstName}</p>
                     )}
                   </div>
-                )}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Phone</label>
-                  <input
-                    type="tel"
-                    required
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.phone ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  />
-                  {errors.phone && (
-                    <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+                  <div>
+                    <label className="block text-base font-medium text-gray-700 mb-1">Last Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.lastName ? 'border-red-300' : ''}`}
+                    />
+                    {errors.lastName && (
+                      <p className="mt-1 text-xs text-red-600">{errors.lastName}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-base font-medium text-gray-700 mb-1">Email</label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.email ? 'border-red-300' : ''}`}
+                    />
+                    {errors.email && (
+                      <p className="mt-1 text-xs text-red-600">{errors.email}</p>
+                    )}
+                  </div>
+                  {!isEditMode && (
+                    <div>
+                      <label className="block text-base font-medium text-gray-700 mb-1">Password</label>
+                      <input
+                        type="password"
+                        required
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.password ? 'border-red-300' : ''}`}
+                      />
+                      {errors.password && (
+                        <p className="mt-1 text-xs text-red-600">{errors.password}</p>
+                      )}
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-base font-medium text-gray-700 mb-1">Phone</label>
+                    <input
+                      type="tel"
+                      required
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.phone ? 'border-red-300' : ''}`}
+                    />
+                    {errors.phone && (
+                      <p className="mt-1 text-xs text-red-600">{errors.phone}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-base font-medium text-gray-700 mb-1">Address</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.address ? 'border-red-300' : ''}`}
+                    />
+                    {errors.address && (
+                      <p className="mt-1 text-xs text-red-600">{errors.address}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-base font-medium text-gray-700 mb-1">Role</label>
+                    <select
+                      required
+                      value={formData.role}
+                      onChange={(e) => setFormData({ ...formData, role: e.target.value as 'pharmacist' | 'doctor' | 'delivery' })}
+                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.role ? 'border-red-300' : ''}`}
+                    >
+                      <option value="pharmacist">Pharmacist</option>
+                      <option value="doctor">Doctor</option>
+                      <option value="delivery">Delivery</option>
+                    </select>
+                    {errors.role && (
+                      <p className="mt-1 text-xs text-red-600">{errors.role}</p>
+                    )}
+                  </div>
+                  {formData.role === 'doctor' && (
+                    <div className="md:col-span-2">
+                      <label className="block text-base font-medium text-gray-700 mb-1">Speciality</label>
+                      <input
+                        type="text"
+                        value={formData.speciality}
+                        onChange={e => setFormData({ ...formData, speciality: e.target.value })}
+                        className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2"
+                        required={formData.role === 'doctor'}
+                      />
+                    </div>
                   )}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Address</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.address ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  />
-                  {errors.address && (
-                    <p className="mt-1 text-sm text-red-600">{errors.address}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Role</label>
-                  <select
-                    required
-                    value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value as 'pharmacist' | 'doctor' | 'delivery' })}
-                    className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.role ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  >
-                    <option value="pharmacist">Pharmacist</option>
-                    <option value="doctor">Doctor</option>
-                    <option value="delivery">Delivery</option>
-                  </select>
-                  {errors.role && (
-                    <p className="mt-1 text-sm text-red-600">{errors.role}</p>
-                  )}
-                </div>
-                <div className="flex justify-end space-x-3 mt-5">
+                <div className="flex justify-end space-x-3 mt-6">
                   <button
                     type="button"
                     onClick={handleModalClose}
-                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-200"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 font-semibold shadow-sm"
                   >
                     {isEditMode ? 'Update' : 'Add'}
                   </button>
