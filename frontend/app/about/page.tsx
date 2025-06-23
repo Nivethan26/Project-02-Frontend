@@ -56,7 +56,28 @@ export default function AboutPage() {
           <div className="flex-1 space-y-6 text-center md:text-left">
             <h3 className="text-[#e74c3c] font-semibold text-left">Why Us</h3>
             <div className="space-y-4">
-              {[{ icon: '💊', title: 'Expert Care', desc: 'Our licensed pharmacists and healthcare professionals bring 5+ years of combined experience to provide personalized advice and solutions.' }, { icon: '🩺', title: 'Patient-First Approach', desc: 'You are more than a prescription: we listen, educate, and empower you to make informed health decisions.' }, { icon: '✅', title: 'Quality Guaranteed', desc: 'Every product on our shelves is rigorously vetted for safety, efficacy, and affordability.' }, { icon: '🌱', title: 'Community Roots', desc: "We're proud to support local initiatives/programs, because your health is our shared priority." }].map((item, i) => (
+              {[
+                {
+                  icon: '💊',
+                  title: 'Expert Care',
+                  desc: 'Our licensed pharmacists and healthcare professionals bring 5+ years of combined experience to provide personalized advice and solutions.',
+                },
+                {
+                  icon: '🩺',
+                  title: 'Patient-First Approach',
+                  desc: 'You\'re more than a prescription: we listen, educate, and empower you to make informed health decisions.',
+                },
+                {
+                  icon: '✅',
+                  title: 'Quality Guaranteed',
+                  desc: 'Every product on our shelves is rigorously vetted for safety, efficacy, and affordability.',
+                },
+                {
+                  icon: '🌱',
+                  title: 'Community Roots',
+                  desc: 'We\'re proud to support local initiatives/programs, because your health is our shared priority.',
+                },
+              ].map((item, i) => (
                 <div key={i} className="flex items-start gap-4">
                   <div className="bg-blue-100 p-2 rounded-full">
                     <span className="text-blue-600 text-xl">{item.icon}</span>
@@ -95,7 +116,6 @@ export default function AboutPage() {
               </div>
             </div>
           </div>
-
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">
               <Image
@@ -148,7 +168,26 @@ export default function AboutPage() {
           <span className="text-[#e74c3c] font-semibold">Meet the Team</span>
           <h3 className="text-black font-bold mt-2 mb-6">The Heart of Our Pharmacy</h3>
           <div className="grid md:grid-cols-3 gap-8">
-            {[{ img: '/images/team-1.jpeg', name: 'Dr. Siva Karan, PharmD', title: 'Chief Pharmacist', experience: '15 years' }, { img: '/images/team-2.jpeg', name: 'Dr. Mayoori, MD', title: 'Medical Advisor', experience: '12 years' }, { img: '/images/team-3.jpeg', name: 'Dr. Sathyan', title: 'Director of Health Services', experience: '8 years' }].map((member, i) => (
+            {[
+              {
+                img: '/images/team-1.jpeg',
+                name: 'Dr. Siva Karan, PharmD',
+                title: 'Chief Pharmacist',
+                experience: '15 years',
+              },
+              {
+                img: '/images/team-2.jpeg',
+                name: 'Dr. Mayoori, MD',
+                title: 'Medical Advisor',
+                experience: '12 years',
+              },
+              {
+                img: '/images/team-3.jpeg',
+                name: 'Dr. Sathyan',
+                title: 'Director of Health Services',
+                experience: '8 years',
+              },
+            ].map((member, i) => (
               <div key={i} className="text-center">
                 <Image src={member.img} alt={member.name} width={128} height={128} className="mx-auto rounded-full w-32 h-32 object-cover mb-2" />
                 <h4 className="text-black font-bold">{member.name}</h4>

@@ -195,6 +195,37 @@ const userService = {
       throw error;
     }
   },
+
+  async getDoctorAvailability(): Promise<{ date: string, slots: string[] }[]> {
+    try {
+      const response = await api.get('/doctor/availability');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching doctor availability:', error);
+      throw error;
+    }
+  },
+
+  async updateAvailabilitySlot(date: string, slot: string): Promise<{ date: string, slots: string[] }> {
+    try {
+      const response = await api.put('/doctor/availability/slot', { date, slot });
+      return response.data;
+    } catch (error) {
+      console.error('Error adding availability slot:', error);
+      throw error;
+    }
+  },
+
+  async deleteAvailabilitySlot(date: string, slot: string): Promise<{ message?: string }> {
+    try {
+      // Use the 'data' property for the request body in a DELETE request with axios
+      const response = await api.delete('/doctor/availability/slot', { data: { date, slot } });
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting availability slot:', error);
+      throw error;
+    }
+  },
 };
 
 export default userService; 
