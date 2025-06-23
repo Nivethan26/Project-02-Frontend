@@ -554,7 +554,11 @@ export default function ProductPage() {
             {getSortedAndFilteredProducts().map((product, index) => {
               const cartItem = cartItems.find((item) => item.id === product._id);
               return (
-                <div key={product._id} className="bg-white rounded-lg shadow-sm overflow-hidden relative flex flex-col">
+                <div 
+                  key={product._id} 
+                  className="bg-white rounded-lg shadow-sm overflow-hidden relative flex flex-col cursor-pointer transition-shadow duration-300 hover:shadow-xl"
+                  onClick={() => router.push(`/products/${product._id}`)}
+                >
                   {/* Out of Stock label */}
                   {product.stock === 0 && !cartItem && (
                     <div className="absolute top-2 left-2 z-10">
@@ -564,11 +568,11 @@ export default function ProductPage() {
                   <div className="p-4 flex flex-col h-full">
                     <div className="flex justify-center mb-4">
                       <div className="relative h-48 w-full overflow-hidden rounded-t-lg bg-gray-200">
-                        {product.stock === 0 && (
+                        {/* {product.stock === 0 && (
                           <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-full z-10">
                             Out of Stock
                           </div>
-                        )}
+                        )} */}
                         <Image
                           src={getProductImage(product)}
                           alt={product.name}
@@ -593,7 +597,7 @@ export default function ProductPage() {
                     
                     <div className="mt-auto pt-4">
                       {cartItem ? (
-                        <div className="flex items-center justify-center w-full rounded-full border border-gray-300">
+                        <div className="flex items-center justify-center w-full rounded-full border border-gray-300" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={() => handleQuantityChange(product._id, cartItem.quantity - 1)}
                             className="px-4 py-2 text-lg font-bold text-gray-600 hover:bg-gray-100 rounded-l-full transition"
@@ -611,11 +615,14 @@ export default function ProductPage() {
                         </div>
                       ) : (
                         <button
-                          onClick={() =>
-                            product.prescription === 'required'
-                              ? handleUploadClick(product)
-                              : handleAddToCart(product)
-                          }
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (product.prescription === 'required') {
+                              handleUploadClick(product);
+                            } else {
+                              handleAddToCart(product);
+                            }
+                          }}
                           className="w-full py-2 px-4 rounded-lg text-white font-medium bg-[#1A5CFF] hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
                           disabled={product.stock === 0}
                         >
