@@ -20,7 +20,11 @@ function getToday() {
 }
 
 function formatDate(date: Date) {
-  return date.toISOString().split('T')[0];
+  // Always returns YYYY-MM-DD in local time
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function getMonthDays(year: number, month: number) {
@@ -33,7 +37,7 @@ function getMonthDays(year: number, month: number) {
 }
 
 export default function AvailabilityPage() {
-  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [month, setMonth] = useState(new Date().getMonth());
   const [year, setYear] = useState(new Date().getFullYear());
   const [availability, setAvailability] = useState<Record<string, string[]>>({});
@@ -48,24 +52,23 @@ export default function AvailabilityPage() {
       setLoading(true);
       try {
         const data = await userService.getDoctorAvailability();
-        const today = getToday();
-        const dates: Date[] = [];
+        const todayString = formatDate(getToday());
+        const dates: string[] = [];
         const avail: Record<string, string[]> = {};
         data.forEach(item => {
-          const itemDate = new Date(item.date);
-          itemDate.setUTCHours(0,0,0,0);
-          if (itemDate >= today) {
-            dates.push(itemDate);
-            avail[item.date] = item.slots;
+          const itemDateString = item.date;
+          if (itemDateString >= todayString) {
+            dates.push(itemDateString);
+            avail[itemDateString] = item.slots;
           }
         });
-        const sortedDates = dates.sort((a, b) => a.getTime() - b.getTime());
+        const sortedDates = dates.sort();
         setSelectedDates(sortedDates);
         setAvailability(avail);
         if (sortedDates.length > 0) {
-          setActiveDate(formatDate(sortedDates[0]));
+          setActiveDate(sortedDates[0]);
         } else {
-          setActiveDate(formatDate(getToday()));
+          setActiveDate(todayString);
         }
       } catch (err) {
         console.error("Failed to fetch availability", err);
@@ -98,8 +101,8 @@ export default function AvailabilityPage() {
   const handleDateClick = (date: Date) => {
     const dateKey = formatDate(date);
     setActiveDate(dateKey);
-    if (!selectedDates.some(d => formatDate(d) === dateKey)) {
-      const newSelectedDates = [...selectedDates, date].sort((a, b) => a.getTime() - b.getTime());
+    if (!selectedDates.includes(dateKey)) {
+      const newSelectedDates = [...selectedDates, dateKey].sort();
       setSelectedDates(newSelectedDates);
     }
   };
@@ -139,11 +142,11 @@ export default function AvailabilityPage() {
         delete newAvail[dateKey];
         return newAvail;
     });
-    setSelectedDates(prev => prev.filter(d => formatDate(d) !== dateKey));
+    setSelectedDates(prev => prev.filter(d => d !== dateKey));
   
     if (activeDate === dateKey) {
-        const remainingDates = originalSelectedDates.filter(d => formatDate(d) !== dateKey);
-        setActiveDate(remainingDates.length > 0 ? formatDate(remainingDates[0]) : formatDate(getToday()));
+        const remainingDates = originalSelectedDates.filter(d => d !== dateKey);
+        setActiveDate(remainingDates.length > 0 ? remainingDates[0] : formatDate(getToday()));
     }
   
     try {
@@ -185,7 +188,7 @@ export default function AvailabilityPage() {
                   {Array(new Date(year, month, 1).getDay()).fill(null).map((_, i) => <div key={`empty-${i}`} />)}
                   {days.map(date => {
                     const dateKey = formatDate(date);
-                    const isSelected = selectedDates.some(d => formatDate(d) === dateKey);
+                    const isSelected = selectedDates.includes(dateKey);
                     const isActive = activeDate === dateKey;
                     const isPast = date < getToday();
                     const dayNumber = date.getDate();
@@ -213,16 +216,17 @@ export default function AvailabilityPage() {
                 <div className="bg-white p-4 rounded-lg shadow-sm">
                   <h2 className="font-semibold text-gray-800 mb-3 flex items-center"><Calendar className="mr-2 h-5 w-5 text-gray-500" /> Selected Dates</h2>
                   <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
-                    {selectedDates.length > 0 ? selectedDates.map(date => {
-                      const dateKey = formatDate(date);
+                    {selectedDates.length > 0 ? selectedDates.map(dateString => {
+                      const [year, month, day] = dateString.split('-');
+                      const displayDate = new Date(Number(year), Number(month) - 1, Number(day));
                       return (
                         <div 
-                          key={dateKey} 
-                          className={`flex justify-between items-center p-2.5 rounded-md cursor-pointer transition-colors ${activeDate === dateKey ? 'bg-blue-100' : 'hover:bg-gray-50'}`} 
-                          onClick={() => setActiveDate(dateKey)}
+                          key={dateString} 
+                          className={`flex justify-between items-center p-2.5 rounded-md cursor-pointer transition-colors ${activeDate === dateString ? 'bg-blue-100' : 'hover:bg-gray-50'}`} 
+                          onClick={() => setActiveDate(dateString)}
                         >
-                          <span className="font-medium text-sm text-gray-600">{new Date(date.getTime() + date.getTimezoneOffset() * 60000).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span>
-                          <button onClick={(e) => {e.stopPropagation(); handleDeleteDate(dateKey);}} className="p-1 text-gray-400 hover:text-red-500 rounded-full"><Trash2 className="h-4 w-4" /></button>
+                          <span className="font-medium text-sm text-gray-600">{displayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                          <button onClick={(e) => {e.stopPropagation(); handleDeleteDate(dateString);}} className="p-1 text-gray-400 hover:text-red-500 rounded-full"><Trash2 className="h-4 w-4" /></button>
                         </div>
                       )
                     }) : <p className="text-sm text-gray-500 p-2">No dates selected.</p>}
@@ -230,8 +234,8 @@ export default function AvailabilityPage() {
                 </div>
 
                 <div className="bg-white p-4 rounded-lg shadow-sm">
-                  <h2 className="font-semibold text-gray-800 mb-3 flex items-center"><Clock className="mr-2 h-5 w-5 text-gray-500" /> Time Slots for {activeDate ? new Date(activeDate.replace(/-/g, '/')).toLocaleDateString('en-US', {month: 'long', day: 'numeric'}) : '...'}</h2>
-                  {activeDate && !isPast(new Date(activeDate.replace(/-/g, '/'))) ? (
+                  <h2 className="font-semibold text-gray-800 mb-3 flex items-center"><Clock className="mr-2 h-5 w-5 text-gray-500" /> Time Slots for {activeDate ? (() => { const [y, m, d] = activeDate.split('-'); return new Date(Number(y), Number(m)-1, Number(d)).toLocaleDateString('en-US', {month: 'long', day: 'numeric'}); })() : '...'}</h2>
+                  {activeDate && !isPastString(activeDate) ? (
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                       {TIME_SLOTS.map(slot => (
                         <button
@@ -256,9 +260,11 @@ export default function AvailabilityPage() {
   );
 }
 
-function isPast(date: Date): boolean {
-    const today = getToday();
-    // Compare date part only
-    const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    return normalizedDate < today;
+function isPastString(dateString: string): boolean {
+  const today = getToday();
+  const [year, month, day] = dateString.split('-');
+  const date = new Date(Number(year), Number(month) - 1, Number(day));
+  // Compare date part only
+  const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return normalizedDate < today;
 } 
