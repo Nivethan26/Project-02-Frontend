@@ -21,6 +21,7 @@ interface CartContextType {
   isLoggedIn: boolean;
   setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
   logout: () => void;
+  hasHydrated: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -34,19 +35,40 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Function to check login and load cart
   const checkLoginAndLoadCart = async () => {
     if (typeof window === 'undefined') return;
+    // const token = sessionStorage.getItem('token');
+    // if (token) {
+    //   try {
+    //     const backendCart = await userService.getCart();
+    //     setCartItems(
+    //       backendCart.map(item => ({
+    //         id: item.product._id,
+    //         name: item.product.name,
+    //         price: item.product.price,
+    //         image: item.product.image,
+    //         quantity: item.quantity,
+    //       }))
+    //     );
+    //     setIsLoggedIn(true);
+
     const token = sessionStorage.getItem('token');
     if (token) {
       try {
         const backendCart = await userService.getCart();
-        setCartItems(
-          backendCart.map(item => ({
+        console.log('Backend cart received:', backendCart);
+        
+        // Filter out any items with null or invalid product data
+        const validCartItems = backendCart
+          .filter(item => item.product && item.product._id && item.product.name)
+          .map(item => ({
             id: item.product._id,
             name: item.product.name,
-            price: item.product.price,
-            image: item.product.image,
-            quantity: item.quantity,
-          }))
-        );
+            price: item.product.price || 0,
+            image: item.product.image || '',
+            quantity: item.quantity || 1,
+          }));
+        
+        console.log('Valid cart items after filtering:', validCartItems);
+        setCartItems(validCartItems);
         setIsLoggedIn(true);
       } catch (error) {
         console.error('Failed to load cart:', error);
@@ -151,7 +173,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const clearCart = () => {
+    console.log('CartContext: clearCart called. Current cart items:', cartItems);
     setCartItems([]);
+    console.log('CartContext: Cart cleared successfully');
   };
 
   const logout = () => {
@@ -162,7 +186,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQuantity, clearCart, isLoggedIn, setIsLoggedIn, logout }}>
+    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQuantity, clearCart, isLoggedIn, setIsLoggedIn, logout, hasHydrated }}>
       {children}
     </CartContext.Provider>
   );

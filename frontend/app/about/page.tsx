@@ -65,7 +65,7 @@ export default function AboutPage() {
                 {
                   icon: '🩺',
                   title: 'Patient-First Approach',
-                  desc: 'You're more than a prescription: we listen, educate, and empower you to make informed health decisions.',
+                  desc: 'You\'re more than a prescription: we listen, educate, and empower you to make informed health decisions.',
                 },
                 {
                   icon: '✅',
@@ -75,7 +75,7 @@ export default function AboutPage() {
                 {
                   icon: '🌱',
                   title: 'Community Roots',
-                  desc: 'We're proud to support local initiatives/programs, because your health is our shared priority.',
+                  desc: 'We\'re proud to support local initiatives/programs, because your health is our shared priority.',
                 },
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-4">
@@ -111,43 +111,42 @@ export default function AboutPage() {
             </div>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-  <div className="text-center">
-    <img
-      src="/images/prescription checking.jpeg"
-      alt="Prescription Checking"
-      className="mx-auto mb-4 rounded-xl shadow-md w-full h-48 object-cover"
-    />
-    <h4 className="font-semibold mb-2">01 Prescription Checking</h4>
-    <p className="text-blue-100 text-sm">
-      Accuracy you can trust—our pharmacists double-check every prescription for your safety.
-    </p>
-  </div>
+            <div className="text-center">
+              <img
+                src="/images/prescription checking.jpeg"
+                alt="Prescription Checking"
+                className="mx-auto mb-4 rounded-xl shadow-md w-full h-48 object-cover"
+              />
+              <h4 className="font-semibold mb-2">01 Prescription Checking</h4>
+              <p className="text-blue-100 text-sm">
+                Accuracy you can trust—our pharmacists double-check every prescription for your safety.
+              </p>
+            </div>
 
-  <div className="text-center">
-    <img
-      src="/images/homeDelivery.jpg"
-      alt="Home Delivery"
-      className="mx-auto mb-4 rounded-xl shadow-md w-full h-48 object-cover"
-    />
-    <h4 className="font-semibold mb-2">02 Home Delivery</h4>
-    <p className="text-blue-100 text-sm">
-      Skip the trip! Reliable, contact-free delivery for your family's medications.
-    </p>
-  </div>
+            <div className="text-center">
+              <img
+                src="/images/homeDelivery.jpg"
+                alt="Home Delivery"
+                className="mx-auto mb-4 rounded-xl shadow-md w-full h-48 object-cover"
+              />
+              <h4 className="font-semibold mb-2">02 Home Delivery</h4>
+              <p className="text-blue-100 text-sm">
+                Skip the trip! Reliable, contact-free delivery for your family's medications.
+              </p>
+            </div>
 
-  <div className="text-center">
-    <img
-      src="/images/Healthclinic.jpeg"
-      alt="Health Consultations"
-      className="mx-auto mb-4 rounded-xl shadow-md w-full h-48 object-cover"
-    />
-    <h4 className="font-semibold mb-2">03 Health Consultations</h4>
-    <p className="text-blue-100 text-sm">
-      Specialized skin care advice from trusted professionals—personalized solutions for healthy, radiant skin.
-    </p>
-  </div>
-</div>
-
+            <div className="text-center">
+              <img
+                src="/images/Healthclinic.jpeg"
+                alt="Health Consultations"
+                className="mx-auto mb-4 rounded-xl shadow-md w-full h-48 object-cover"
+              />
+              <h4 className="font-semibold mb-2">03 Health Consultations</h4>
+              <p className="text-blue-100 text-sm">
+                Specialized skin care advice from trusted professionals—personalized solutions for healthy, radiant skin.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 

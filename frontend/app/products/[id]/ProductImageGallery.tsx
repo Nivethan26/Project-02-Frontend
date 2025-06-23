@@ -8,19 +8,16 @@ interface ProductImageGalleryProps {
 }
 
 export const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images }) => {
-    const [selectedImage, setSelectedImage] = useState(images.length > 0 ? images[0] : '/placeholder.png');
+    const [selectedImage, setSelectedImage] = useState(images.length > 0 ? images[0] : '');
     const [zoomActive, setZoomActive] = useState(false);
     const [position, setPosition] = useState({ x: 0, y: 0 });
 
     const getImageUrl = (imagePath: string) => {
-        if (!imagePath) return '/placeholder.png';
+        if (!imagePath) return '';
         if (imagePath.startsWith('http')) return imagePath;
         
-        let normalizedPath = imagePath.replace(/\\/g, '/');
-        if (!normalizedPath.startsWith('/')) {
-            normalizedPath = '/' + normalizedPath;
-        }
-        return `http://localhost:8000${normalizedPath}`;
+        const filename = imagePath.replace(/\\/g, '/').split('/').pop();
+        return `http://localhost:8000/uploads/products/${filename}`;
     }
 
     const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
@@ -40,14 +37,16 @@ export const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images
                 onMouseLeave={() => setZoomActive(false)}
                 onMouseMove={handleMouseMove}
             >
-                <Image
-                    src={mainImageUrl}
-                    alt="Product"
-                    fill
-                    priority
-                    className="object-contain rounded-lg"
-                    sizes="(min-width: 1024px) 30vw, 90vw"
-                />
+                {mainImageUrl && (
+                    <Image
+                        src={mainImageUrl}
+                        alt="Product"
+                        fill
+                        priority
+                        className="object-contain rounded-lg"
+                        sizes="(min-width: 1024px) 30vw, 90vw"
+                    />
+                )}
             </div>
             
             <div className="flex gap-3 mt-4">
