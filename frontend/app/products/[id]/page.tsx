@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import React, { JSX, useState } from 'react';
 import { notFound, usePathname, useParams } from 'next/navigation';
@@ -22,6 +23,7 @@ interface Product {
     packSize?: string;
     tags?: string[];
     image?: string;
+    images?: string[];
     prescription?: 'required' | 'not_required';
 }
 
@@ -188,7 +190,13 @@ export default function ProductDetailPage() {
                 </div>
                 <div className="w-full flex flex-col lg:flex-row gap-10">
                     <div className="w-full lg:w-2/5">
-                        <ProductImageGallery images={product.image ? [product.image] : []} />
+                        <ProductImageGallery 
+                            images={
+                                product.images && product.images.length > 0 
+                                ? product.images 
+                                : (product.image ? [product.image] : [])
+                            } 
+                        />
                     </div>
     
                     <div className="w-full lg:w-3/5 flex flex-col md:flex-row gap-8">

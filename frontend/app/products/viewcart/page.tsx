@@ -5,20 +5,39 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 export default function ViewCartPage() {
-  const { cartItems: contextCartItems, removeFromCart, updateQuantity: updateContextQuantity } = useCart();
+  //const { cartItems: contextCartItems, removeFromCart, updateQuantity: updateContextQuantity } = useCart();
+  const { cartItems: contextCartItems, removeFromCart, updateQuantity, isLoggedIn, hasHydrated: contextHydrated } = useCart();
   const [cartItems, setCartItems] = useState(contextCartItems);
   const [hasHydrated, setHasHydrated] = useState(false);
   const router = useRouter();
+
+// Debug: Log login state and cart context
+  useEffect(() => {
+    console.log('Cart page - Login state:', isLoggedIn);
+    console.log('Cart page - Context hydrated:', contextHydrated);
+    console.log('Cart page - Context cart items:', contextCartItems);
+  }, [isLoggedIn, contextHydrated, contextCartItems]);
+
 
   // On mount and when contextCartItems changes, update cartItems based on login state
   useEffect(() => {
     if (typeof window !== "undefined") {
       const token = sessionStorage.getItem("token");
+      console.log('Cart page - Token exists:', !!token);
+      console.log('Cart page - Context cart items:', contextCartItems);
+      
+
       if (token) {
         setCartItems(contextCartItems);
+         console.log('Cart page - Using context cart items:', contextCartItems);
+          
       } else {
+        // const stored = sessionStorage.getItem("cart");
+        // setCartItems(stored ? JSON.parse(stored) : []);
         const stored = sessionStorage.getItem("cart");
-        setCartItems(stored ? JSON.parse(stored) : []);
+        const parsedCart = stored ? JSON.parse(stored) : [];
+        setCartItems(parsedCart);
+        console.log('Cart page - Using stored cart:', parsedCart);
       }
       setHasHydrated(true);
     }
@@ -43,7 +62,7 @@ export default function ViewCartPage() {
     cartItems.forEach(item => {
       const contextItem = contextCartItems.find(ci => ci.id === item.id);
       if (!contextItem || contextItem.quantity !== item.quantity) {
-        updateContextQuantity(item.id, item.quantity);
+        updateQuantity(item.id, item.quantity);
       }
     });
   };
@@ -51,6 +70,33 @@ export default function ViewCartPage() {
   const isDirty = JSON.stringify(cartItems) !== JSON.stringify(contextCartItems);
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+// Function to validate and get safe image URL
+  const getSafeImageUrl = (imageUrl: string | null | undefined): string => {
+    if (!imageUrl || imageUrl.trim() === '') {
+      return '/images/package.png';
+    }
+    
+    // Check if it's a valid URL or relative path
+    try {
+      // If it's already a full URL, validate it
+      if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+        new URL(imageUrl);
+        return imageUrl;
+      }
+      
+      // If it's a relative path, check if it starts with /
+      if (imageUrl.startsWith('/')) {
+        return imageUrl;
+      }
+      
+      // If it doesn't start with /, assume it's a relative path
+      return `/${imageUrl}`;
+    } catch (error) {
+      console.warn('Invalid image URL:', imageUrl);
+      return '/images/package.png';
+    }
+  };
 
   if (!hasHydrated) return null;
 
@@ -99,13 +145,35 @@ export default function ViewCartPage() {
                       className="flex items-center bg-white rounded-2xl shadow p-4 mb-6"
                     >
                       <div className="relative w-20 h-20 flex-shrink-0">
-                        <Image
-                          src={getImageUrl(item.image)}
-                          alt={item.name}
-                          width={80}
-                          height={80}
-                          className="w-20 h-20 object-cover rounded-xl border"
-                        />
+                        {item.image && item.image.trim() !== '' ? (
+                          <Image
+                            src={getImageUrl(item.image)}
+                            alt={item.name}
+                            width={80}
+                            height={80}
+                            className="w-20 h-20 object-cover rounded-xl border"
+                            onError={(e) => {
+                              // Fallback to placeholder if image fails to load
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              // Show the fallback div
+                              const fallback = target.parentElement?.querySelector('.image-fallback') as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-20 h-20 bg-gray-200 rounded-xl border flex items-center justify-center">
+                            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        )}
+                        {/* Fallback div for failed images */}
+                        <div className="image-fallback w-20 h-20 bg-gray-200 rounded-xl border flex items-center justify-center" style={{ display: 'none' }}>
+                          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2z" />
+                          </svg>
+                        </div>
                         <button
                           onClick={() => removeFromCart(item.id)}
                           className="absolute -top-2 -right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors duration-200 shadow-lg"
@@ -190,7 +258,11 @@ export default function ViewCartPage() {
               </div>
               <button
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all duration-300 transform hover:scale-105 shadow-lg"
-                // onClick={handleCheckout}
+                onClick={() => {
+                  console.log('Checkout button clicked - Current cart items:', cartItems);
+                  console.log('Checkout button clicked - Context cart items:', contextCartItems);
+                  router.push('/products/viewcart/payment');
+                }}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
