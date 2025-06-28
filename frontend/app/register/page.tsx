@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 "use client";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -50,6 +50,7 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrength>({
     score: 0,
     feedback: [],
@@ -175,6 +176,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
 
     if (!validateForm()) {
       return;
@@ -195,11 +197,22 @@ export default function RegisterPage() {
       await authService.register(registerData);
       // Clear any existing auth data
       authService.logout();
-      // Redirect to login page
-      router.push('/login');
+      // Show success message
+      setSuccess('Registration successful! Redirecting to login...');
+      // Redirect to login page after a short delay
+      setTimeout(() => {
+        router.push('/login');
+      }, 2000);
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message);
+        // Check if it's a duplicate email error
+        if (err.message.includes('User already exists') || err.message.includes('already exists')) {
+          setError('An account with this email address already exists. Please try logging in instead.');
+        } else if (err.message.includes('400') || err.message.includes('Bad Request')) {
+          setError('Registration failed. Please check your information and try again.');
+        } else {
+          setError(err.message);
+        }
       } else {
         setError('An error occurred during registration. Please try again.');
       }
@@ -351,6 +364,31 @@ export default function RegisterPage() {
                         </div>
                         <div className="ml-3">
                           <p className="text-sm text-red-700">{error}</p>
+                          {error.includes('already exists') && (
+                            <p className="text-sm text-red-600 mt-1">
+                              <Link href="/login" className="underline hover:text-red-800">
+                                Click here to login instead
+                              </Link>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Success Message */}
+                {success && (
+                  <div className="mb-6">
+                    <div className="bg-green-50 border-l-4 border-green-500 p-4">
+                      <div className="flex">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm text-green-700">{success}</p>
                         </div>
                       </div>
                     </div>
@@ -373,9 +411,12 @@ export default function RegisterPage() {
                           name="firstName"
                           value={formData.firstName}
                           onChange={handleChange}
+                          disabled={loading}
                           className={`block w-full pl-10 pr-3 py-2 rounded-lg border ${
                             errors.firstName ? 'border-red-500' : 'border-gray-300'
-                          } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                          } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                            loading ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
                           placeholder="John"
                         />
                       </div>
@@ -397,9 +438,12 @@ export default function RegisterPage() {
                           name="lastName"
                           value={formData.lastName}
                           onChange={handleChange}
+                          disabled={loading}
                           className={`block w-full pl-10 pr-3 py-2 rounded-lg border ${
                             errors.lastName ? 'border-red-500' : 'border-gray-300'
-                          } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                          } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                            loading ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
                           placeholder="Doe"
                         />
                       </div>
@@ -423,9 +467,12 @@ export default function RegisterPage() {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
+                        disabled={loading}
                         className={`block w-full pl-10 pr-3 py-2 rounded-lg border ${
                           errors.email ? 'border-red-500' : 'border-gray-300'
-                        } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                        } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          loading ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                         placeholder="john.doe@example.com"
                       />
                     </div>
@@ -449,9 +496,12 @@ export default function RegisterPage() {
                           name="password"
                           value={formData.password}
                           onChange={handleChange}
+                          disabled={loading}
                           className={`block w-full pl-10 pr-3 py-2 rounded-lg border ${
                             errors.password ? 'border-red-500' : 'border-gray-300'
-                          } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                          } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                            loading ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
                           placeholder="••••••••"
                         />
                       </div>
@@ -503,9 +553,12 @@ export default function RegisterPage() {
                           name="confirmPassword"
                           value={formData.confirmPassword}
                           onChange={handleChange}
+                          disabled={loading}
                           className={`block w-full pl-10 pr-3 py-2 rounded-lg border ${
                             errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-                          } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                          } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                            loading ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
                           placeholder="••••••••"
                         />
                       </div>
@@ -529,9 +582,12 @@ export default function RegisterPage() {
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
+                        disabled={loading}
                         className={`block w-full pl-10 pr-3 py-2 rounded-lg border ${
                           errors.phone ? 'border-red-500' : 'border-gray-300'
-                        } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                        } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          loading ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                         placeholder="+1 (555) 000-0000"
                       />
                     </div>
@@ -554,10 +610,13 @@ export default function RegisterPage() {
                         name="address"
                         value={formData.address}
                         onChange={handleChange}
+                        disabled={loading}
                         rows={3}
                         className={`block w-full pl-10 pr-3 py-2 rounded-lg border ${
                           errors.address ? 'border-red-500' : 'border-gray-300'
-                        } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                        } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          loading ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                         placeholder="Enter your full address"
                       />
                     </div>
@@ -574,7 +633,10 @@ export default function RegisterPage() {
                         name="agreeToTerms"
                         checked={formData.agreeToTerms}
                         onChange={(e) => setFormData({ ...formData, agreeToTerms: e.target.checked })}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        disabled={loading}
+                        className={`h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded ${
+                          loading ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                       />
                     </div>
                     <div className="text-sm">
