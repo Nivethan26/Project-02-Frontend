@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -55,7 +56,7 @@ export default function Sidebar({ role }: SidebarProps) {
         { href: '/dashboard/admin/users', label: 'Users Management', icon: Users },
         { href: '/dashboard/admin/orders', label: 'Orders', icon: ShoppingCart },
         { href: '/dashboard/admin/inventory', label: 'Inventory', icon: Package },
-        { href: '/dashboard/admin/delivery', label: 'Delivery', icon: Truck },
+        // { href: '/dashboard/admin/delivery', label: 'Delivery', icon: Truck },
         { href: '/dashboard/admin/reports', label: 'Reports', icon: Activity },
         { href: '/dashboard/admin/doctors', label: 'Doctors', icon: Stethoscope }
       );
@@ -66,7 +67,6 @@ export default function Sidebar({ role }: SidebarProps) {
         // { href: '/dashboard/pharmacist', label: 'Dashboard', icon: BarChart3 },
         { href: '/dashboard/pharmacist/prescriptions', label: 'Prescriptions', icon: FileText },
         { href: '/dashboard/pharmacist/pos', label: 'Point of Sale', icon: CreditCard },
-        { href: '/dashboard/pharmacist/orders', label: 'Orders', icon: ShoppingCart },
         { href: '/dashboard/pharmacist/inventory', label: 'Inventory', icon: Package },
       );
     }
@@ -82,7 +82,7 @@ export default function Sidebar({ role }: SidebarProps) {
     if (role === 'delivery') {
       links.push(
         { href: '/dashboard/delivery/assignedorders', label: 'Assigned Orders', icon: Package },
-        { href: '/dashboard/delivery/history', label: 'Delivery History', icon: Activity },
+        { href: '/dashboard/delivery/history', label: 'Delivery History', icon: Truck },
         { href: '/dashboard/delivery/profile', label: 'Profile', icon: User },
       );
     }
@@ -143,21 +143,16 @@ export default function Sidebar({ role }: SidebarProps) {
         </nav>
 
         {/* Quick Actions */}
-        <div className="mt-8 pt-6 border-t border-slate-700">
-          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 px-4">
-            Quick Actions
-          </h3>
-          <div className="space-y-2">
-            <button className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-700 hover:text-white transition-all duration-200 group">
+
+            {/* <button className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-700 hover:text-white transition-all duration-200 group">
               <Bell className="w-5 h-5 text-slate-400 group-hover:text-white" />
               <span className="font-medium">Notifications</span>
-            </button>
+            </button> */}
             {/* <button className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-700 hover:text-white transition-all duration-200 group">
               <Settings className="w-5 h-5 text-slate-400 group-hover:text-white" />
               <span className="font-medium">Settings</span>
             </button> */}
-          </div>
-        </div>
+
       </div>
 
       {/* Footer */}
