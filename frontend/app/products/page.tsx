@@ -8,6 +8,7 @@ import Navbar from '@/components/layout/Navbar';
 import CartSidebar from '@/components/CartSidebar';
 import { toast } from 'react-hot-toast';
 import { useCart } from '@/context/CartContext';
+import Loader from '@/components/Loader';
 
 // List of categories (should match sidebar)
 const categories = [
@@ -285,79 +286,7 @@ export default function ProductPage() {
   if (!hasHydrated) return null;
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col bg-[#F8F9FF]">
-        <Navbar />
-        <div className="flex flex-1">
-          {/* Left Sidebar */}
-          <div className="w-64 bg-gradient-to-b from-blue-50 to-[#E9EDFF] shadow-lg h-screen sticky top-0 overflow-y-auto rounded-r-3xl">
-            <div className="py-6 px-4">
-              <ul>
-                {categories.map((cat) => (
-                  <li
-                    key={cat}
-                    className={`mb-2 px-4 py-2 rounded-full cursor-pointer transition-all duration-200 select-none
-                      ${selectedCategory === cat
-                        ? 'bg-[#1A5CFF] text-white shadow font-semibold scale-105'
-                        : 'text-gray-700 hover:bg-blue-100 hover:scale-105'}
-                    `}
-                    onClick={() => setSelectedCategory(cat)}
-                  >
-                    {cat}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="flex-1 p-6">
-            {/* Search and Cart Section (skeleton) */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="relative flex-1 max-w-2xl">
-                <div className="w-full h-10 bg-gray-200 rounded-lg animate-pulse" />
-              </div>
-              <div className="flex items-center ml-4 bg-white rounded-lg shadow-sm px-4 py-2">
-                <div className="relative">
-                  <div className="h-6 w-6 bg-gray-200 rounded-full animate-pulse" />
-                </div>
-                <div className="ml-3">
-                  <div className="h-4 w-16 bg-gray-200 rounded animate-pulse mb-1" />
-                  <div className="h-4 w-20 bg-gray-200 rounded animate-pulse" />
-                </div>
-              </div>
-            </div>
-
-            {/* Filter Section (skeleton) */}
-            <div className="bg-[#E9EDFF] rounded-lg shadow-sm px-8 py-4 mb-6">
-              <div className="flex justify-between items-center max-w-4xl">
-                <div className="flex items-center gap-16">
-                  <div className="h-6 w-24 bg-gray-200 rounded animate-pulse" />
-                  <div className="h-6 w-24 bg-gray-200 rounded animate-pulse" />
-                </div>
-              </div>
-            </div>
-
-            {/* Skeleton Products Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {Array.from({ length: 8 }).map((_, idx) => (
-                <div key={idx} className="bg-white rounded-lg shadow-sm overflow-hidden relative">
-                  <div className="p-4 flex flex-col h-full">
-                    <div className="flex justify-center mb-4">
-                      <div className="relative w-40 h-40 bg-gray-200 rounded-lg animate-pulse" />
-                    </div>
-                    <div className="h-6 w-32 bg-gray-200 rounded mb-2 animate-pulse mx-auto" />
-                    <div className="h-5 w-20 bg-gray-200 rounded mb-2 animate-pulse mx-auto" />
-                    <div className="h-4 w-16 bg-gray-200 rounded mb-4 animate-pulse mx-auto" />
-                    <div className="w-full mt-4 py-2 px-4 rounded-lg bg-gray-200 animate-pulse h-10" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <Loader />;
   }
 
   if (error) {
@@ -568,11 +497,6 @@ export default function ProductPage() {
                   <div className="p-4 flex flex-col h-full">
                     <div className="flex justify-center mb-4">
                       <div className="relative h-48 w-full overflow-hidden rounded-t-lg bg-gray-200">
-                        {/* {product.stock === 0 && (
-                          <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-full z-10">
-                            Out of Stock
-                          </div>
-                        )} */}
                         <Image
                           src={getProductImage(product)}
                           alt={product.name}

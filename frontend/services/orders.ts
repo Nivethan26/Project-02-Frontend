@@ -1,4 +1,5 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+import authService from './auth';
 
 export interface OrderItem {
   id: string;
@@ -192,6 +193,87 @@ export const getAvailableProducts = async () => {
     return result.data;
   } catch (error) {
     console.error('Error fetching available products:', error);
+    throw error;
+  }
+};
+
+// Get all orders by status (for delivery dashboard)
+export const getOrdersByStatus = async (status: string) => {
+  const response = await fetch(`${API_BASE_URL}/orders?status=${status}`);
+  if (!response.ok) throw new Error('Failed to fetch orders');
+  const result = await response.json();
+  if (!result.success) throw new Error(result.message || 'Failed to fetch orders');
+  return result.data;
+};
+
+// Update order status by ID (for delivery dashboard)
+export const updateOrderStatus = async (orderId: string, status: string) => {
+  const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+  if (!response.ok) throw new Error('Failed to update order status');
+  const result = await response.json();
+  if (!result.success) throw new Error(result.message || 'Failed to update order status');
+  return result.data;
+};
+
+// Get all orders for admin dashboard
+export const getAllOrders = async (params: {
+  status?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+} = {}): Promise<{
+  orders: Order[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalOrders: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}> => {
+  try {
+    const token = authService.getToken();
+    if (!token) {
+      throw new Error('Authentication token not found. Please log in again.');
+    }
+
+    const queryParams = new URLSearchParams();
+    if (params.status) queryParams.append('status', params.status);
+    if (params.search) queryParams.append('search', params.search);
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+
+    const response = await fetch(`${API_BASE_URL}/orders/admin/all?${queryParams.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        // Token might be expired, redirect to login
+        authService.logout();
+        window.location.href = '/login';
+        throw new Error('Session expired. Please log in again.');
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.message || 'Failed to fetch orders');
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error('Error fetching all orders:', error);
     throw error;
   }
 }; 
