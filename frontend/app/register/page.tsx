@@ -1,4 +1,3 @@
-
 "use client";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -261,13 +260,13 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       <Navbar />
       
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
+      <div className="container mx-auto px-4 py-3">
+        <div className="max-w-6xl mx-auto">
           {/* Registration Card */}
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
             <div className="md:flex">
               {/* Left Side - Image and Info */}
-              <div className="md:w-1/2 bg-gradient-to-b from-blue-600 to-blue-800 p-12 text-white hidden md:block relative">
+              <div className="md:w-1/3 bg-gradient-to-b from-blue-600 to-blue-800 p-12 text-white hidden md:block relative">
                 {/* Medical Background Pattern */}
                 <div className="absolute inset-0 opacity-10">
                   <svg className="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -345,7 +344,7 @@ export default function RegisterPage() {
               </div>
 
               {/* Right Side - Registration Form */}
-              <div className="md:w-1/2 p-8">
+              <div className="md:w-2/3 p-8">
                 <div className="text-center mb-8">
                   <h3 className="text-2xl font-bold text-gray-800">Create an Account</h3>
                   <p className="text-gray-600 mt-2">Fill in your details to get started</p>
@@ -397,7 +396,7 @@ export default function RegisterPage() {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Name Fields */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
                       <div className="relative">
@@ -451,6 +450,33 @@ export default function RegisterPage() {
                         <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
                       )}
                     </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                        </div>
+                        <input
+                          type="tel"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleChange}
+                          disabled={loading}
+                          className={`block w-full pl-10 pr-3 py-2 rounded-lg border ${
+                            errors.phone ? 'border-red-500' : 'border-gray-300'
+                          } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                            loading ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
+                          placeholder="+1 (555) 000-0000"
+                        />
+                      </div>
+                      {errors.phone && (
+                        <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+                      )}
+                    </div>
                   </div>
 
                   {/* Email Field */}
@@ -482,7 +508,7 @@ export default function RegisterPage() {
                   </div>
 
                   {/* Password Fields */}
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                       <div className="relative">
@@ -566,34 +592,6 @@ export default function RegisterPage() {
                         <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
                       )}
                     </div>
-                  </div>
-
-                  {/* Phone Field */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
-                      </div>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        disabled={loading}
-                        className={`block w-full pl-10 pr-3 py-2 rounded-lg border ${
-                          errors.phone ? 'border-red-500' : 'border-gray-300'
-                        } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                          loading ? 'opacity-50 cursor-not-allowed' : ''
-                        }`}
-                        placeholder="+1 (555) 000-0000"
-                      />
-                    </div>
-                    {errors.phone && (
-                      <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
-                    )}
                   </div>
 
                   {/* Address Field */}

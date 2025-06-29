@@ -20,6 +20,8 @@ export interface User {
   role: 'customer' | 'admin' | 'doctor' | 'pharmacist' | 'delivery';
   status: 'active' | 'inactive';
   createdAt: string;
+  updatedAt?: string;
+  profileImage?: string;
 }
 
 export interface AuthResponse {
