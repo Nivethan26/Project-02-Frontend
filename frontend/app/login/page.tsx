@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import authService from '@/services/auth';
@@ -8,6 +8,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Dialog } from '@headlessui/react';
 import { useCart } from '@/context/CartContext';
+import { Button } from '@/components/ui/button';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,6 +29,17 @@ export default function LoginPage() {
   const [forgotError, setForgotError] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState('');
   const { setIsLoggedIn } = useCart();
+  const [rememberMe, setRememberMe] = useState(false);
+
+  // Prefill email if remembered
+  useEffect(() => {
+    const remembered = localStorage.getItem('rememberMe') === 'true';
+    const rememberedEmail = localStorage.getItem('rememberedEmail') || '';
+    if (remembered && rememberedEmail) {
+      setFormData(prev => ({ ...prev, email: rememberedEmail }));
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -42,6 +54,10 @@ export default function LoginPage() {
         [name]: ''
       }));
     }
+  };
+
+  const handleRememberMeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRememberMe(e.target.checked);
   };
 
   const validateForm = () => {
@@ -74,6 +90,15 @@ export default function LoginPage() {
     try {
       // Clear any existing auth data before login
       authService.logout();
+      
+      // Remember email if checked
+      if (rememberMe) {
+        localStorage.setItem('rememberMe', 'true');
+        localStorage.setItem('rememberedEmail', formData.email);
+      } else {
+        localStorage.removeItem('rememberMe');
+        localStorage.removeItem('rememberedEmail');
+      }
       
       const response = await authService.login(formData.email, formData.password);
       
@@ -189,7 +214,7 @@ export default function LoginPage() {
           </radialGradient>
         </defs>
       </svg>
-      <svg className="absolute bottom-0 right-0 w-[400px] h-[400px] opacity-20 animate-pulse z-0" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg className="absolute bottom-0 right-0 w-[60vw] max-w-[400px] h-auto opacity-20 animate-pulse z-0" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="200" cy="200" r="200" fill="url(#paint1_radial)" />
         <defs>
           <radialGradient id="paint1_radial" cx="0" cy="0" r="1" gradientTransform="translate(200 200) scale(200)" gradientUnits="userSpaceOnUse">
@@ -202,14 +227,11 @@ export default function LoginPage() {
       <Navbar/>
 
       {/* Login Form */}
-      <div className="flex flex-1 items-center justify-center py-12 px-4 sm:px-6 lg:px-8 z-10 relative">
+      <div className="flex flex-1 items-center justify-center py-8 px-2 sm:px-6 lg:px-8 z-10 relative">
         <div className="w-full max-w-md space-y-8">
           {/* Brand/Logo */}
           <div className="flex flex-col items-center">
-            <div className="w-20 h-20 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center shadow-2xl mb-2 border-4 border-blue-200">
-              <span className="text-blue-700 font-extrabold text-3xl tracking-wider drop-shadow">SK</span>
-            </div>
-            <h2 className="mt-2 text-center text-4xl font-extrabold text-white drop-shadow-lg tracking-tight">Sign in to your account</h2>
+            <h2 className="mt-2 text-center text-3xl sm:text-4xl font-extrabold text-white drop-shadow-lg tracking-tight">Sign in to your account</h2>
             <p className="mt-2 text-center text-base text-blue-100 font-medium">Welcome back! Access your health, orders, and more.</p>
             <p className="mt-1 text-center text-sm text-blue-100">
               Or{' '}
@@ -217,8 +239,8 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="mt-8 bg-white/60 backdrop-blur-xl py-10 px-8 shadow-2xl rounded-3xl border border-blue-100">
-            <form className="space-y-7" onSubmit={handleSubmit}>
+          <div className="mt-8 bg-white/70 backdrop-blur-2xl py-8 px-4 sm:px-8 shadow-2xl rounded-3xl border border-blue-100 transition-all duration-300 hover:shadow-blue-200/60">
+            <form className="space-y-6" onSubmit={handleSubmit}>
               {error && (
                 <div className="rounded-md bg-red-50 p-4 mb-2">
                   <div className="flex">
@@ -280,32 +302,34 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0">
                 <div className="flex items-center">
                   <input
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-blue-300 rounded transition-all duration-200"
+                    checked={rememberMe}
+                    onChange={handleRememberMeChange}
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-blue-700 font-medium">
                     Remember me
                   </label>
                 </div>
-                <div className="text-sm">
+                <div className="text-sm mt-2 sm:mt-0">
                   <button type="button" onClick={() => setShowForgotModal(true)} className="font-semibold text-blue-600 hover:text-blue-800 transition-all duration-200">Forgot your password?</button>
                 </div>
               </div>
 
               <div>
-                <button
+                <Button
                   type="submit"
                   disabled={loading}
-                  className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-lg font-bold rounded-xl text-white bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-700 hover:to-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-300 shadow-xl transition-all duration-200 hover:shadow-blue-400/50 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed animate-glow"
-                  style={{ boxShadow: '0 0 16px 2px #60A5FA, 0 2px 8px 0 #2563EB33' }}
+                  size="lg"
+                  className="w-full font-bold shadow-xl animate-glow"
                 >
                   {loading ? 'Signing in...' : 'Sign in'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -317,24 +341,39 @@ export default function LoginPage() {
 
       {/* Forgot Password Modal */}
       <Dialog open={showForgotModal} onClose={() => setShowForgotModal(false)} className="fixed z-50 inset-0 overflow-y-auto">
-        <div className="flex items-center justify-center min-h-screen px-4">
+        <div className="flex items-center justify-center min-h-screen px-2 sm:px-4">
           <div className="fixed inset-0 bg-black opacity-30" />
-          <div className="relative bg-white rounded-xl shadow-xl max-w-md w-full mx-auto p-8 z-50">
-            <Dialog.Title className="text-lg font-bold mb-4 text-blue-700">Forgot Password</Dialog.Title>
+          <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-auto p-6 sm:p-8 z-50 border border-blue-100">
+            <button
+              className="absolute top-3 right-3 text-gray-400 hover:text-blue-700 text-2xl transition-colors"
+              onClick={() => setShowForgotModal(false)}
+              aria-label="Close"
+              type="button"
+            >
+              ×
+            </button>
+            <div className="flex flex-col items-center mb-4">
+              <div className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-50 mb-2 shadow">
+                <svg className="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a3 3 0 003.22 0L22 8m-19 8V8a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
+              </div>
+              <Dialog.Title className="text-xl font-bold text-blue-700 text-center">Forgot Password</Dialog.Title>
+              <p className="text-sm text-blue-500 text-center mt-1">Enter your email to receive an OTP and reset your password.</p>
+            </div>
             {forgotStep === 1 && (
               <div className="space-y-4">
                 <input
                   type="email"
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="w-full border border-blue-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500 bg-blue-50 text-blue-900 placeholder-blue-300 transition-all duration-200"
                   placeholder="Enter your email"
                   value={forgotEmail}
                   onChange={e => setForgotEmail(e.target.value)}
                   disabled={forgotLoading}
                 />
                 <button
-                  className="w-full bg-blue-600 text-white rounded-lg py-2 font-semibold hover:bg-blue-700"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-lg py-2 font-semibold hover:from-blue-700 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300 shadow transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
                   onClick={handleForgotPassword}
                   disabled={forgotLoading || !forgotEmail}
+                  type="button"
                 >
                   {forgotLoading ? 'Sending OTP...' : 'Send OTP'}
                 </button>
@@ -344,16 +383,17 @@ export default function LoginPage() {
               <div className="space-y-4">
                 <input
                   type="text"
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="w-full border border-blue-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500 bg-blue-50 text-blue-900 placeholder-blue-300 transition-all duration-200"
                   placeholder="Enter OTP"
                   value={forgotOTP}
                   onChange={e => setForgotOTP(e.target.value)}
                   disabled={forgotLoading}
                 />
                 <button
-                  className="w-full bg-blue-600 text-white rounded-lg py-2 font-semibold hover:bg-blue-700"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-lg py-2 font-semibold hover:from-blue-700 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300 shadow transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
                   onClick={handleVerifyOTP}
                   disabled={forgotLoading || !forgotOTP}
+                  type="button"
                 >
                   {forgotLoading ? 'Verifying...' : 'Verify OTP'}
                 </button>
@@ -363,31 +403,25 @@ export default function LoginPage() {
               <div className="space-y-4">
                 <input
                   type="password"
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="w-full border border-blue-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500 bg-blue-50 text-blue-900 placeholder-blue-300 transition-all duration-200"
                   placeholder="Enter new password"
                   value={forgotNewPassword}
                   onChange={e => setForgotNewPassword(e.target.value)}
                   disabled={forgotLoading}
                 />
                 <button
-                  className="w-full bg-blue-600 text-white rounded-lg py-2 font-semibold hover:bg-blue-700"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-lg py-2 font-semibold hover:from-blue-700 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300 shadow transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
                   onClick={handleResetPassword}
                   disabled={forgotLoading || !forgotNewPassword}
+                  type="button"
                 >
                   {forgotLoading ? 'Resetting...' : 'Reset Password'}
                 </button>
               </div>
             )}
             {(forgotError || forgotSuccess) && (
-              <div className={`mt-4 text-sm ${forgotError ? 'text-red-600' : 'text-green-600'}`}>{forgotError || forgotSuccess}</div>
+              <div className={`mt-4 text-sm text-center ${forgotError ? 'text-red-600' : 'text-green-600'}`}>{forgotError || forgotSuccess}</div>
             )}
-            <button
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-700"
-              onClick={() => setShowForgotModal(false)}
-              aria-label="Close"
-            >
-              ×
-            </button>
           </div>
         </div>
       </Dialog>

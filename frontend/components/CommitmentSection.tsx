@@ -3,8 +3,8 @@ import { Badge } from "@/components/ui/badge"
 
 export default function CommitmentSection() {
   return (
-    <section className="bg-white py-16">
-      <div className="max-w-6xl mx-auto px-4 grid lg:grid-cols-2 gap-12 items-center">
+    <section className="bg-white py-12 sm:py-16">
+      <div className="max-w-6xl mx-auto px-2 sm:px-4 grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
         {/* Left content */}
         <div className="space-y-6">
           <Badge className="bg-red-100 text-red-600">Why Us</Badge>
@@ -28,7 +28,7 @@ export default function CommitmentSection() {
               <h4 className="font-semibold text-lg">✔ Eco-Friendly Practices</h4>
               <p className="text-gray-700 text-sm mt-1">
                 We prioritize sustainability—from biodegradable packaging to ethical sourcing—because your health
-                and the planet’s future go hand in hand.
+                and the planet's future go hand in hand.
               </p>
             </li>
           </ul>
