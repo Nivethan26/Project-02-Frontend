@@ -1,29 +1,32 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export default function PromoSection() {
   return (
-    <section className="bg-white py-12">
-      <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-2 gap-6">
+    <section className="bg-white py-8 sm:py-12 sm:px-2">
+      <div className="max-w-6xl mx-auto px-2 sm:px-4 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         {/* Box 1: Big Sale */}
-        <div className="bg-blue-100 p-6 rounded-xl shadow-md flex items-center justify-between">
-          <div className="flex-1">
-            <Badge className="bg-purple-600 text-white text-xs font-bold mb-2">Big Sale</Badge>
-            <h3 className="text-lg font-semibold text-black mb-1">
-              Get an Extra <span className="text-blue-600 font-bold">10% Off</span>
+        <div className="relative bg-blue-100 rounded-2xl shadow-md flex items-stretch overflow-visible min-h-[250px]">
+          {/* Text content */}
+          <div className="flex-1 pl-8 pr-56 py-10 flex flex-col justify-left">
+            <span className="font-bold text-lg mb-2">Big Sale</span>
+            <h3 className="text-4xl font-bold text-black mb-2">
+              Get an Extra <span className="text-blue-600">10% Off</span>
             </h3>
-            <p className="text-sm text-black">
+            <p className="text-base text-gray-700">
               Beauty steals alert! Save an extra 10% on your favourite cosmetics today!
             </p>
           </div>
-          <div className="ml-4">
+          {/* Overlapping image */}
+          <div className="absolute right-0 -top-1/3 translate-y-1/10 z-10 drop-shadow-2xl">
             <Image
               src="/images/cosmetics sale.jpg"
               alt="Promo"
-              width={120}
-              height={150}
-              className="rounded w-auto"
+              width={220}
+              height={320}
+              className="rounded-2xl w-[220px] h-[320px] object-cover"
             />
           </div>
         </div>

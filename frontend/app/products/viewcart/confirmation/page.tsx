@@ -3,6 +3,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
+import Loader from '@/components/Loader';
 
 interface OrderConfirmationData {
   orderNumber: string;
@@ -30,7 +31,7 @@ interface OrderConfirmationData {
 export default function OrderConfirmationPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { clearCart } = useCart();
+  useCart();
   const [orderData, setOrderData] = useState<OrderConfirmationData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -48,7 +49,7 @@ export default function OrderConfirmationPage() {
         return imageUrl;
       }
       return `/${imageUrl}`;
-    } catch (error) {
+    } catch {
       console.warn('Invalid image URL:', imageUrl);
       return '/images/package.png';
     }
@@ -97,8 +98,8 @@ export default function OrderConfirmationPage() {
             estimatedDelivery: calculateEstimatedDelivery()
           });
           setLoading(false);
-        } catch (error) {
-          console.error('Error parsing order data:', error);
+        } catch {
+          console.error('Error parsing order data:');
           setLoading(false);
           router.push('/products');
         }
@@ -134,14 +135,7 @@ export default function OrderConfirmationPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-green-50 to-emerald-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-green-700">Loading your order confirmation...</p>
-        </div>
-      </div>
-    );
+    return <Loader />;
   }
 
   if (!orderData) {

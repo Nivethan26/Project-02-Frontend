@@ -20,6 +20,8 @@ export interface User {
   role: 'customer' | 'admin' | 'doctor' | 'pharmacist' | 'delivery';
   status: 'active' | 'inactive';
   createdAt: string;
+  updatedAt?: string;
+  profileImage?: string;
 }
 
 export interface AuthResponse {
@@ -29,12 +31,23 @@ export interface AuthResponse {
 
 const authService = {
   async register(data: RegisterData): Promise<AuthResponse> {
-    const response = await axios.post(`${API_URL}/auth/register`, data);
-    if (response.data.token) {
-      sessionStorage.setItem('token', response.data.token);
-      sessionStorage.setItem('user', JSON.stringify(response.data.user));
+    try {
+      const response = await axios.post(`${API_URL}/auth/register`, data);
+      if (response.data.token) {
+        sessionStorage.setItem('token', response.data.token);
+        sessionStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+      return response.data;
+    } catch (error: any) {
+      // Handle axios error response
+      if (error.response && error.response.data && error.response.data.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('Registration failed. Please try again.');
+      }
     }
-    return response.data;
   },
 
   async login(email: string, password: string): Promise<AuthResponse> {
