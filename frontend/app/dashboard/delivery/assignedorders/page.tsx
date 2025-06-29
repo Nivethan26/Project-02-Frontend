@@ -226,7 +226,7 @@ export default function AssignedOrderPage() {
               <Card className="border-0 shadow-xl bg-white">
                 <CardContent className="p-6">
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-slate-200">
+                    <table className="min-w-[1100px] divide-y divide-slate-200">
                       <thead className="bg-slate-50">
                         <tr>
                           <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
@@ -241,7 +241,7 @@ export default function AssignedOrderPage() {
                               <span>Customer</span>
                             </div>
                           </th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                          <th className="px-2 py-2 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
                             <div className="flex items-center space-x-2">
                               <FaMapMarkerAlt className="w-4 h-4" />
                               <span>Delivery Address</span>
@@ -280,8 +280,8 @@ export default function AssignedOrderPage() {
                               <div className="text-sm font-semibold text-slate-900">{order.name}</div>
                               <div className="text-xs text-slate-500">Customer</div>
                             </td>
-                            <td className="px-6 py-4">
-                              <div className="text-sm text-slate-700 max-w-xs truncate" title={order.address}>
+                            <td className="px-6 py-4 max-w-xs truncate">
+                              <div className="text-sm text-slate-700" title={order.address}>
                                 {order.address}
                               </div>
                               <div className="text-xs text-slate-500">Delivery Location</div>
@@ -298,7 +298,7 @@ export default function AssignedOrderPage() {
                                 </span>
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-6 py-4 whitespace-nowrap min-w-[140px]">
                               <div className="flex items-center space-x-2">
                                 <select
                                   value={order.status}

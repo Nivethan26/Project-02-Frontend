@@ -16,17 +16,15 @@ import {
   Edit, 
   KeyRound, 
   Trash2, 
-  Lock, 
   AlertTriangle,
   Camera,
   Save,
   X,
   CheckCircle,
-  Clock,
-  Settings,
-  Upload
+  Settings
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 function getInitials(firstName?: string, lastName?: string) {
   return (firstName?.[0] || '') + (lastName?.[0] || '');
@@ -130,7 +128,7 @@ export default function CustomerProfilePage() {
         }
         
         // Show success message
-        alert('Profile image uploaded successfully!');
+        toast.success('Profile image uploaded successfully!');
       } else {
         throw new Error('Invalid response from server');
       }
@@ -428,7 +426,7 @@ export default function CustomerProfilePage() {
             </div>
           </div>
 
-                          <div className="flex items-center space-x-4 p-4 bg-slate-50 rounded-xl">
+                          {/* <div className="flex items-center space-x-4 p-4 bg-slate-50 rounded-xl">
                             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                               <Clock className="w-5 h-5 text-purple-600" />
                             </div>
@@ -444,7 +442,7 @@ export default function CustomerProfilePage() {
                                 }) : 'N/A'}
                               </p>
                             </div>
-                          </div>
+                          </div> */}
                         </div>
                     </div>
 

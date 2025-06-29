@@ -5,6 +5,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Loader from '@/components/Loader';
 
 // Toast implementation with color
 function showToast(message: string, type: 'success' | 'error' = 'error') {
@@ -37,7 +38,7 @@ export default function UploadPrescriptionPage() {
     agree: false,
   });
   const [submitting, setSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const slides = [
@@ -95,7 +96,7 @@ export default function UploadPrescriptionPage() {
         router.push("/dashboard");
         return;
       }
-      setIsLoading(false);
+      setLoading(false);
     } catch {
       router.push("/login");
     }
@@ -247,15 +248,8 @@ export default function UploadPrescriptionPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+  if (loading) {
+    return <Loader />;
   }
 
   return (
