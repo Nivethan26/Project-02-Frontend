@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import axios from 'axios';
 
@@ -22,6 +23,9 @@ export interface User {
   createdAt: string;
   updatedAt?: string;
   profileImage?: string;
+  phone?: string;
+  address?: string;
+  speciality?: string;
 }
 
 export interface AuthResponse {
@@ -131,7 +135,7 @@ const authService = {
     return response.data;
   },
 
-  async fetchProfile(): Promise<User & { phone?: string; address?: string }> {
+  async fetchProfile(): Promise<User> {
     const token = this.getToken();
     if (!token) throw new Error('No auth token');
     const response = await axios.get(`${API_URL}/auth/profile`, {
@@ -140,7 +144,7 @@ const authService = {
     return response.data;
   },
 
-  async updateProfile(data: Partial<RegisterData>): Promise<User & { phone?: string; address?: string }> {
+  async updateProfile(data: Partial<RegisterData & { speciality?: string }>): Promise<User> {
     const token = this.getToken();
     if (!token) throw new Error('No auth token');
     const response = await axios.put(`${API_URL}/auth/profile`, data, {

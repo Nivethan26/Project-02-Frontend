@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
@@ -52,6 +53,8 @@ export default function InventoryPage() {
   });
   const [imagePreview, setImagePreview] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<InventoryItem | null>(null);
 
   useEffect(() => {
     // Check if user is logged in and is admin
@@ -240,43 +243,59 @@ export default function InventoryPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this item?')) {
-      try {
-        const token = sessionStorage.getItem('token');
-        if (!token) {
-          toast.error('Authentication token not found');
-          router.push('/login');
-          return;
-        }
-
-        const response = await axios.delete(
-          `http://localhost:8000/api/admin/inventory/${id}`,
-          { 
-            headers: { 
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            } 
-          }
-        );
-        
-        if (response.data) {
-          toast.success('Item deleted successfully');
-          fetchInventory();
-        }
-      } catch (error: any) {
-        console.error('Delete error:', error);
-        console.error('Error response:', error.response);
-        
-        if (error.response?.status === 401) {
-          toast.error('Authentication failed. Please login again.');
-          router.push('/login');
-          return;
-        }
-        
-        const errorMessage = error.response?.data?.message || 'Failed to delete item';
-        toast.error(errorMessage);
-      }
+    const item = inventory.find(item => item._id === id);
+    if (item) {
+      setItemToDelete(item);
+      setDeleteModalOpen(true);
     }
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    
+    try {
+      const token = sessionStorage.getItem('token');
+      if (!token) {
+        toast.error('Authentication token not found');
+        router.push('/login');
+        return;
+      }
+
+      const response = await axios.delete(
+        `http://localhost:8000/api/admin/inventory/${itemToDelete._id}`,
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          } 
+        }
+      );
+      
+      if (response.data) {
+        toast.success('Item deleted successfully');
+        fetchInventory();
+      }
+    } catch (error: any) {
+      console.error('Delete error:', error);
+      console.error('Error response:', error.response);
+      
+      if (error.response?.status === 401) {
+        toast.error('Authentication failed. Please login again.');
+        router.push('/login');
+        return;
+      }
+      
+      const errorMessage = error.response?.data?.message || 'Failed to delete item';
+      toast.error(errorMessage);
+    } finally {
+      setDeleteModalOpen(false);
+      setItemToDelete(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteModalOpen(false);
+    setItemToDelete(null);
   };
 
   const resetForm = () => {
@@ -600,6 +619,68 @@ export default function InventoryPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalOpen && itemToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'linear-gradient(120deg, rgba(239,68,68,0.7) 0%, rgba(255,255,255,0.7) 100%)' }}>
+          <div className="relative max-w-md w-full mx-auto rounded-2xl shadow-2xl bg-white" style={{ borderTop: '6px solid #ef4444' }}>
+            {/* Red accent bar */}
+            <div className="w-full h-2 rounded-t-2xl" style={{ background: 'linear-gradient(90deg, #ef4444 0%, #f87171 100%)' }} />
+            <div className="p-6 sm:p-8">
+              <div className="flex flex-col items-center mb-6">
+                {/* Warning Icon */}
+                <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-full flex items-center justify-center mb-4 shadow-lg">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2 text-center">Delete Item</h3>
+                <p className="text-gray-600 text-center mb-4">
+                  Are you sure you want to delete <span className="font-semibold text-gray-800">"{itemToDelete.name}"</span>?
+                </p>
+                <p className="text-sm text-red-600 text-center">
+                  This action cannot be undone.
+                </p>
+              </div>
+
+              {/* Item Preview */}
+              <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="relative w-16 h-16 flex-shrink-0">
+                    <Image
+                      src={getImageUrl(itemToDelete.images && itemToDelete.images.length > 0 ? itemToDelete.images[0] : itemToDelete.image)}
+                      alt={itemToDelete.name}
+                      fill
+                      className="object-cover rounded-lg"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-gray-800 truncate">{itemToDelete.name}</h4>
+                    <p className="text-sm text-gray-600 capitalize">{itemToDelete.category}</p>
+                    <p className="text-sm text-gray-600">Stock: {itemToDelete.stock}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={cancelDelete}
+                  className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-200 font-semibold transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 font-semibold shadow-sm transition-colors"
+                >
+                  Delete Item
+                </button>
+              </div>
             </div>
           </div>
         </div>
