@@ -42,7 +42,6 @@ export default function CustomerPrescriptionsPage() {
   const [showModal, setShowModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showLightbox, setShowLightbox] = useState(false);
-  const [notifications, setNotifications] = useState<string[]>([]);
 
   useEffect(() => {
     fetchPrescriptions();
@@ -69,21 +68,6 @@ export default function CustomerPrescriptionsPage() {
         let data: Prescription[] = await response.json();
         // Explicitly sort by createdAt descending (newest first)
         data = data.sort((a: Prescription, b: Prescription) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        // Check for status changes and show notifications
-        if (prescriptions.length > 0) {
-          data.forEach((newPrescription: Prescription) => {
-            const oldPrescription = prescriptions.find((p: Prescription) => p._id === newPrescription._id);
-            if (oldPrescription && oldPrescription.status !== newPrescription.status) {
-              if (newPrescription.status === 'approved') {
-                setNotifications(prev => [...prev, `✅ Prescription approved! You can now place your order.`]);
-              } else if (newPrescription.status === 'rejected') {
-                setNotifications(prev => [...prev, `❌ Prescription rejected. Check details for more information.`]);
-              } else if (newPrescription.status === 'processing') {
-                setNotifications(prev => [...prev, `⏳ Prescription is now being processed.`]);
-              }
-            }
-          });
-        }
         setPrescriptions(data);
       } else {
         showToast('Failed to fetch prescriptions', 'error');
@@ -279,9 +263,10 @@ export default function CustomerPrescriptionsPage() {
                               <span className="text-xs text-blue-700 font-medium">Click to view PDF</span>
                             </div>
                           ) : (
-                            <img
+                            <Image
                               src={`http://localhost:8000${image}`}
                               alt={`Prescription ${index + 1}`}
+                              fill
                               className="object-contain w-full h-full scale-100 group-hover:scale-105 transition-transform duration-200"
                             />
                           )}
