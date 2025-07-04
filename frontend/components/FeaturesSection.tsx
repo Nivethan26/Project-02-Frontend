@@ -5,7 +5,7 @@ export default function FeaturesSection() {
     {
       icon: <Truck className="w-6 h-6 text-blue-600" />,
       title: "Free Shipping",
-      text: "Order Over Rs. 1000",
+      text: "Order Over Rs. 15000",
     },
     {
       icon: <CreditCard className="w-6 h-6 text-blue-600" />,
