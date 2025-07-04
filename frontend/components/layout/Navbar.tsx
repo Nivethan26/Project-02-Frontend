@@ -5,6 +5,8 @@ import { useRouter, usePathname } from "next/navigation"
 import authService, { User } from "@/services/auth"
 import { useCart } from '@/context/CartContext'
 import Image from "next/image"
+import { User as LucideUser } from "lucide-react"
+import LogoutConfirmModal from '@/components/LogoutConfirmModal'
 
 export default function Navbar() {
   const router = useRouter()
@@ -13,6 +15,9 @@ export default function Navbar() {
   const { logout } = useCart()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const profileRef = useRef<HTMLDivElement>(null)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   useEffect(() => {
     // Check for user data on mount and route changes
@@ -34,11 +39,36 @@ export default function Navbar() {
     }
   }, [pathname])
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setProfileOpen(false)
+      }
+    }
+    if (profileOpen) {
+      document.addEventListener("mousedown", handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [profileOpen])
+
   const handleLogout = () => {
-    logout()
-    setUser(null)
-    router.push('/')
-  }
+    setShowLogoutModal(true);
+    setProfileOpen(false);
+  };
+
+  const confirmLogout = () => {
+    logout();
+    setUser(null);
+    setShowLogoutModal(false);
+    router.push('/');
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutModal(false);
+  };
 
   const isCustomer = user?.role === 'customer'
   const isStaff = ['admin', 'doctor', 'pharmacist', 'delivery'].includes(user?.role || '')
@@ -47,7 +77,7 @@ export default function Navbar() {
   const showPublicNav = !isStaff || pathname === '/'
 
   return (
-    <nav className="relative flex items-center px-4 md:px-16 py-4 bg-[#e3edff] w-full sticky top-0 z-50">
+    <nav className="sticky flex items-center px-4 md:px-16 py-4 bg-[#e3edff] w-full top-0 z-50">
       <Link href="/">
         <Image src="/images/logo.png" alt="SK Medicals" width={160} height={15} />
       </Link>
@@ -78,29 +108,40 @@ export default function Navbar() {
       <div className="hidden md:flex items-center space-x-4 ml-auto">
         {user && authService.getToken() ? (
           <div className="inline-flex items-center space-x-4">
-            {/* Customer Dashboard Link */}
-            {isCustomer && (
-              <Link href="/dashboard/customer" className="text-blue-600">
-                Dashboard
-              </Link>
-            )}
-            {/* Staff Dashboard Link */}
-            {isStaff && (
-              <Link href={`/dashboard/${user.role}`} className="text-blue-600">
-                Dashboard
-              </Link>
-            )}
-            {/* User Info and Logout */}
-            <div className="flex items-center space-x-2">
-              <span className="text-gray-700">
-                Welcome, {user.firstName}
-              </span>
+            {/* Profile Dropdown */}
+            <div className="relative" ref={profileRef}>
               <button
-                onClick={handleLogout}
-                className="text-red-600 hover:underline"
+                onClick={() => setProfileOpen((open) => !open)}
+                className="flex items-center focus:outline-none"
+                aria-label="Open profile menu"
               >
-                Logout
+                <span className="text-gray-700 mr-2">Welcome, {user.firstName}</span>
+                <LucideUser className="w-9 h-9 text-blue-700 bg-blue-200 border-2 border-blue-400 rounded-full p-1" />
               </button>
+              {profileOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-blue-100 z-50">
+                  <Link
+                    href={isCustomer ? "/dashboard/customer" : `/dashboard/${user.role}`}
+                    className="block px-4 py-2 text-gray-700 hover:bg-blue-50"
+                    onClick={() => setProfileOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/dashboard/customer/profile"
+                    className="block px-4 py-2 text-gray-700 hover:bg-blue-50"
+                    onClick={() => setProfileOpen(false)}
+                  >
+                    Profile
+                  </Link>
+                  <button
+                    onClick={() => { handleLogout(); setProfileOpen(false); }}
+                    className="block w-full text-left px-4 py-2 text-red-600 hover:bg-blue-50"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ) : (
@@ -176,6 +217,7 @@ export default function Navbar() {
           </div>
         </div>
       )}
+      <LogoutConfirmModal open={showLogoutModal} onConfirm={confirmLogout} onCancel={cancelLogout} />
     </nav>
   )
 }

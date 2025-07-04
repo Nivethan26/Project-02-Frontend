@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { useRef, useState, useEffect } from "react";
+import type React from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Loader from '@/components/Loader';
 
 // Toast implementation with color
 function showToast(message: string, type: 'success' | 'error' = 'error') {
@@ -24,20 +26,19 @@ export default function UploadPrescriptionPage() {
     name: "",
     email: "",
     phone: "",
-    address: "",
     city: "",
+    address: "",
     duration: "",
-    gender: "",
-    allergies: "",
-    hasAllergies: "",
     payment: "",
+    gender: "",
+    hasAllergies: "",
+    allergies: "",
     substitutes: "",
-    frequency: "",
     notes: "",
     agree: false,
   });
   const [submitting, setSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const slides = [
@@ -95,39 +96,56 @@ export default function UploadPrescriptionPage() {
         router.push("/dashboard");
         return;
       }
-      setIsLoading(false);
+      setLoading(false);
     } catch {
       router.push("/login");
     }
   }, [router]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files).slice(0, 5 - files.length);
-      setFiles((prev) => [...prev, ...newFiles].slice(0, 5));
-    }
-  };
-
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const newFiles = Array.from(e.dataTransfer.files).slice(0, 5 - files.length);
-    setFiles((prev) => [...prev, ...newFiles].slice(0, 5));
-  };
-
-  const handleRemoveFile = (idx: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== idx));
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    let fieldValue: string | boolean = value;
-    if (type === "checkbox") {
-      fieldValue = (e.target as HTMLInputElement).checked;
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    const filteredFiles = droppedFiles.filter(
+      (file) => file.type.startsWith("image/") || file.type === "application/pdf",
+    );
+    if (files.length + filteredFiles.length <= 5) {
+      setFiles([...files, ...filteredFiles]);
+    } else {
+      alert("You can upload a maximum of 5 files.");
     }
-    setForm((prev) => ({
-      ...prev,
-      [name]: fieldValue,
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    const filteredFiles = selectedFiles.filter(
+      (file) => file.type.startsWith("image/") || file.type === "application/pdf",
+    );
+    if (files.length + filteredFiles.length <= 5) {
+      setFiles([...files, ...filteredFiles]);
+    } else {
+      alert("You can upload a maximum of 5 files.");
+    }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    const newFiles = [...files];
+    newFiles.splice(index, 1);
+    setFiles(newFiles);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    if (type === "checkbox") {
+      setForm((prevForm) => ({
+        ...prevForm,
+        [name]: (e.target as HTMLInputElement).checked,
+      }));
+    } else {
+      setForm((prevForm) => ({
+        ...prevForm,
+        [name]: value,
     }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -184,10 +202,7 @@ export default function UploadPrescriptionPage() {
       showToast('Please select if you are ok to receive substitutes.', 'error');
       return;
     }
-    if (!form.frequency.trim()) {
-      showToast('Please select the frequency.', 'error');
-      return;
-    }
+    
     if (!form.agree) {
       showToast('You must agree to the delivery terms.', 'error');
       return;
@@ -234,7 +249,6 @@ export default function UploadPrescriptionPage() {
         hasAllergies: "",
         payment: "",
         substitutes: "",
-        frequency: "",
         notes: "",
         agree: false,
       });
@@ -247,15 +261,8 @@ export default function UploadPrescriptionPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+  if (loading) {
+    return <Loader />;
   }
 
   return (
@@ -326,7 +333,7 @@ export default function UploadPrescriptionPage() {
           <div className="bg-gray-100 rounded-lg p-0 md:col-span-3">
             {/* Drag & Drop File Upload */}
             <div
-              className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center mb-6 bg-white relative"
+              className="border-2 border-dashed border-blue-200 hover:border-blue-300 rounded-xl p-8 flex flex-col items-center justify-center mb-8 bg-gradient-to-br from-blue-50 to-indigo-50 relative transition-all duration-300 hover:shadow-md"
               onDrop={handleDrop}
               onDragOver={(e) => e.preventDefault()}
             >
@@ -339,57 +346,181 @@ export default function UploadPrescriptionPage() {
                 onChange={handleFileChange}
                 disabled={files.length >= 5}
               />
-              <div
-                className="flex flex-col items-center cursor-pointer"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <span className="text-5xl text-blue-400 mb-2">⬆️</span>
-                <span className="font-semibold text-gray-700 text-lg">Drag & Drop Files Here</span>
-                <span className="text-gray-500 text-sm">or Browse Files</span>
+              <div className="flex flex-col items-center cursor-pointer group" onClick={() => fileInputRef.current?.click()}>
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors duration-300">
+                  <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                    />
+                  </svg>
+                </div>
+                <span className="font-semibold text-gray-800 text-lg mb-1">Drag & Drop Files Here</span>
+                <span className="text-blue-600 text-sm font-medium">or Browse Files</span>
               </div>
+
               {files.length > 0 && (
-                <div className="mt-4 w-full flex flex-wrap gap-2">
+                <div className="mt-6 w-full">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Uploaded Files:</h4>
+                  <div className="flex flex-wrap gap-2">
                   {files.map((file, idx) => (
-                    <div key={idx} className="flex items-center bg-blue-50 px-2 py-1 rounded text-sm">
-                      <span className="mr-2">{file.name}</span>
-                      <button type="button" className="text-red-500 ml-1" onClick={() => handleRemoveFile(idx)}>
-                        ✕
+                      <div
+                        key={idx}
+                        className="flex items-center bg-white border border-blue-200 px-3 py-2 rounded-lg text-sm shadow-sm"
+                      >
+                        <svg className="w-4 h-4 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                        <span className="mr-2 text-gray-700 max-w-[150px] truncate">{file.name}</span>
+                        <button
+                          type="button"
+                          className="text-red-500 hover:text-red-700 ml-1 p-1 rounded-full hover:bg-red-50 transition-colors duration-200"
+                          onClick={() => handleRemoveFile(idx)}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
                       </button>
                     </div>
                   ))}
+                  </div>
                 </div>
               )}
-              <span className="text-xs text-gray-400 mt-2 text-center w-full">
-                You can upload up to 5 pictures. Please upload clear images of the whole prescription. Partial Prescription images will not be processed.
-              </span>
+
+              <div className="mt-4 text-center">
+                <p className="text-xs text-gray-500 mb-1">
+                  You can upload up to 5 pictures. Supported formats: JPG, PNG, PDF
+                </p>
+                <p className="text-xs text-amber-600 font-medium">
+                  Please upload clear images of the whole prescription. Partial images will not be processed.
+                </p>
+              </div>
             </div>
             {/* Form */}
-            <form onSubmit={handleSubmit} className="px-4 pb-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <form onSubmit={handleSubmit} className="px-6 pb-6">
+              <div className="space-y-6">
+                {/* Personal Information Section */}
+                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                    Personal Information
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Your Name<span className="text-red-600">*</span></label>
-                  <input name="name" value={form.name} onChange={handleChange} required className="w-full border rounded px-3 py-2 bg-white" />
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Your Name<span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <input
+                        name="name"
+                        value={form.name}
+                        onChange={handleChange}
+                        required
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-800"
+                        placeholder="Enter your full name"
+                      />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium mb-1">Email Address<span className="text-red-600">*</span></label>
-                  <input name="email" type="email" value={form.email} onChange={handleChange} required className="w-full border rounded px-3 py-2 bg-white" />
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Email Address<span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <input
+                        name="email"
+                        type="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        required
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-800"
+                        placeholder="Enter your email address"
+                      />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium mb-1">Phone Number<span className="text-red-600">*</span></label>
-                  <input name="phone" value={form.phone} onChange={handleChange} required className="w-full border rounded px-3 py-2 bg-white" />
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Phone Number<span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <input
+                        name="phone"
+                        value={form.phone}
+                        onChange={handleChange}
+                        required
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-800"
+                        placeholder="Enter your phone number"
+                      />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium mb-1">City<span className="text-red-600">*</span></label>
-                  <input name="city" value={form.city} onChange={handleChange} required className="w-full border rounded px-3 py-2 bg-white" />
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        City<span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <input
+                        name="city"
+                        value={form.city}
+                        onChange={handleChange}
+                        required
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-800"
+                        placeholder="Enter your city"
+                      />
                 </div>
+
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-1">Address<span className="text-red-600">*</span></label>
-                  <input name="address" value={form.address} onChange={handleChange} required className="w-full border rounded px-3 py-2 bg-white" />
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Address<span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <input
+                        name="address"
+                        value={form.address}
+                        onChange={handleChange}
+                        required
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-800"
+                        placeholder="Enter your complete address"
+                      />
+                    </div>
+                  </div>
                 </div>
+
+                {/* Medical Information Section */}
+                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    Medical Information
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Duration<span className="text-red-600">*</span></label>
-                  <select name="duration" value={form.duration} onChange={handleChange} required className="w-full border rounded px-3 py-2 bg-white">
-                    <option value="">Please select</option>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Duration<span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <select
+                        name="duration"
+                        value={form.duration}
+                        onChange={handleChange}
+                        required
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-800"
+                      >
+                        <option value="">Please select duration</option>
                     <option value="1 week">1 week</option>
                     <option value="2 weeks">2 weeks</option>
                     <option value="1 month">1 month</option>
@@ -398,64 +529,223 @@ export default function UploadPrescriptionPage() {
                     <option value="other">Other</option>
                   </select>
                   {form.duration === "other" && (
-                    <div className="text-red-600 text-xs font-semibold mt-1">**Please mention in the note how many days you need the medicine.**</div>
+                        <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                          <p className="text-amber-800 text-sm font-medium">
+                            Please mention in the notes section how many days you need the medicine.
+                          </p>
+                        </div>
                   )}
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium mb-1">Payment Method<span className="text-red-600">*</span></label>
-                  <select name="payment" value={form.payment} onChange={handleChange} required className="w-full border rounded px-3 py-2 bg-white">
-                    <option value="">Please select</option>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Payment Method<span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <select
+                        name="payment"
+                        value={form.payment}
+                        onChange={handleChange}
+                        required
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-800"
+                      >
+                        <option value="">Please select payment method</option>
                     <option value="card">Card</option>
-                    <option value="online">Online</option>
                   </select>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium mb-1">Gender<span className="text-red-600">*</span></label>
-                  <div className="flex gap-4 mt-1">
-                    <label><input type="radio" name="gender" value="male" checked={form.gender === "male"} onChange={handleChange} required /> Male</label>
-                    <label><input type="radio" name="gender" value="female" checked={form.gender === "female"} onChange={handleChange} required /> Female</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        Gender<span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <div className="flex gap-6">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name="gender"
+                            value="male"
+                            checked={form.gender === "male"}
+                            onChange={handleChange}
+                            required
+                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                          />
+                          <span className="ml-2 text-gray-700 font-medium">Male</span>
+                        </label>
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name="gender"
+                            value="female"
+                            checked={form.gender === "female"}
+                            onChange={handleChange}
+                            required
+                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                          />
+                          <span className="ml-2 text-gray-700 font-medium">Female</span>
+                        </label>
                   </div>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium mb-1">Medicine allergies?<span className="text-red-600">*</span></label>
-                  <div className="flex gap-4 mt-1">
-                    <label><input type="radio" name="hasAllergies" value="yes" checked={form.hasAllergies === "yes"} onChange={handleChange} required /> Yes</label>
-                    <label><input type="radio" name="hasAllergies" value="no" checked={form.hasAllergies === "no"} onChange={handleChange} required /> No</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        Medicine allergies?<span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <div className="flex gap-6 mb-3">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name="hasAllergies"
+                            value="yes"
+                            checked={form.hasAllergies === "yes"}
+                            onChange={handleChange}
+                            required
+                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                          />
+                          <span className="ml-2 text-gray-700 font-medium">Yes</span>
+                        </label>
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name="hasAllergies"
+                            value="no"
+                            checked={form.hasAllergies === "no"}
+                            onChange={handleChange}
+                            required
+                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                          />
+                          <span className="ml-2 text-gray-700 font-medium">No</span>
+                        </label>
                   </div>
                   {form.hasAllergies === "yes" && (
-                    <input name="allergies" value={form.allergies} onChange={handleChange} placeholder="Describe allergies" className="w-full border rounded px-3 py-2 bg-white mt-2" />
+                        <input
+                          name="allergies"
+                          value={form.allergies}
+                          onChange={handleChange}
+                          placeholder="Please describe your allergies in detail"
+                          className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-800"
+                        />
                   )}
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium mb-1">Ok to receive substitutes?<span className="text-red-600">*</span></label>
-                  <div className="flex gap-4 mt-1">
-                    <label><input type="radio" name="substitutes" value="yes" checked={form.substitutes === "yes"} onChange={handleChange} required /> Yes</label>
-                    <label><input type="radio" name="substitutes" value="no" checked={form.substitutes === "no"} onChange={handleChange} required /> No</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        Ok to receive substitutes?<span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <div className="flex gap-6">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name="substitutes"
+                            value="yes"
+                            checked={form.substitutes === "yes"}
+                            onChange={handleChange}
+                            required
+                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                          />
+                          <span className="ml-2 text-gray-700 font-medium">Yes</span>
+                        </label>
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name="substitutes"
+                            value="no"
+                            checked={form.substitutes === "no"}
+                            onChange={handleChange}
+                            required
+                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                          />
+                          <span className="ml-2 text-gray-700 font-medium">No</span>
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 </div>
+
+                {/* Additional Information Section */}
+                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <svg className="w-5 h-5 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
+                    Additional Information
+                  </h3>
+
                 <div>
-                  <label className="block text-sm font-medium mb-1">Frequency<span className="text-red-600">*</span></label>
-                  <div className="flex gap-4 mt-1">
-                    <label><input type="radio" name="frequency" value="one" checked={form.frequency === "one"} onChange={handleChange} required /> One Time</label>
-                    <label><input type="radio" name="frequency" value="ongoing" checked={form.frequency === "ongoing"} onChange={handleChange} required /> On Going</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Special Notes</label>
+                    <textarea
+                      name="notes"
+                      value={form.notes}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-800 resize-none"
+                      rows={4}
+                      placeholder="Please mention any specific instructions, preferred brands, or additional information..."
+                    />
                   </div>
                 </div>
+
+                {/* Agreement Section */}
+                <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
+                  <div className="flex items-start">
+                    <input
+                      type="checkbox"
+                      name="agree"
+                      checked={form.agree}
+                      onChange={handleChange}
+                      required
+                      className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-0.5 mr-3"
+                    />
+                    <div>
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        <span className="font-semibold">Terms & Conditions:</span> I have no obligation for getting my
+                        medicines delivered by S K Medicals team on behalf of me. I understand that this is a prescription
+                        delivery service and I agree to the terms of service.
+                      </p>
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Special Notes</label>
-                <textarea name="notes" value={form.notes} onChange={handleChange} className="w-full border rounded px-3 py-2 bg-white" rows={3} />
               </div>
-              <div className="flex items-center mb-4">
-                <input type="checkbox" name="agree" checked={form.agree} onChange={handleChange} required className="mr-2" />
-                <span className="text-sm">I have no obligation for getting my medicines delivered by S K Medicals team on behalf of me.</span>
               </div>
+
+                {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-lg font-bold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full flex justify-center items-center py-4 px-6 border border-transparent rounded-xl shadow-lg text-lg font-bold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none transform hover:scale-[1.02]"
                 disabled={submitting}
               >
-                {submitting ? "Submitting..." : "Submit Prescription"}
+                  {submitting ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Submitting Prescription...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                        />
+                      </svg>
+                      Submit Prescription
+                    </>
+                  )}
               </button>
+              </div>
             </form>
           </div>
         </div>

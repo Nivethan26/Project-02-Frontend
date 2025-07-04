@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
+import Loader from '@/components/Loader';
 
 interface OrderConfirmationData {
   orderNumber: string;
@@ -30,7 +32,7 @@ interface OrderConfirmationData {
 export default function OrderConfirmationPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { clearCart } = useCart();
+  useCart();
   const [orderData, setOrderData] = useState<OrderConfirmationData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -48,10 +50,24 @@ export default function OrderConfirmationPage() {
         return imageUrl;
       }
       return `/${imageUrl}`;
-    } catch (error) {
+    } catch {
       console.warn('Invalid image URL:', imageUrl);
       return '/images/package.png';
     }
+  };
+
+  // Function to get the correct image URL for products
+  const getProductImage = (item: { image?: string }) => {
+    const imagePath = item.image;
+    if (!imagePath) {
+      return '/images/package.png';
+    }
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    const filename = imagePath.replace(/\\/g, '/').split('/').pop();
+    const fullUrl = `http://localhost:8000/uploads/products/${filename}`;
+    return fullUrl;
   };
 
   // Calculate estimated delivery date (2-3 weekdays from now)
@@ -97,8 +113,8 @@ export default function OrderConfirmationPage() {
             estimatedDelivery: calculateEstimatedDelivery()
           });
           setLoading(false);
-        } catch (error) {
-          console.error('Error parsing order data:', error);
+        } catch {
+          console.error('Error parsing order data:');
           setLoading(false);
           router.push('/products');
         }
@@ -134,14 +150,7 @@ export default function OrderConfirmationPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-green-50 to-emerald-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-green-700">Loading your order confirmation...</p>
-        </div>
-      </div>
-    );
+    return <Loader />;
   }
 
   if (!orderData) {
@@ -228,17 +237,14 @@ export default function OrderConfirmationPage() {
                     style={{ animationDelay: `${700 + index * 100}ms` }}
                   >
                     <div className="relative w-20 h-20 flex-shrink-0">
-                      <Image
-                        src={getSafeImageUrl(item.image)}
-                        alt={item.name}
-                        width={80}
-                        height={80}
-                        className="w-20 h-20 object-cover rounded-xl border-2 border-gray-200 shadow-sm"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = '/images/package.png';
-                        }}
-                      />
+                    <Image
+                          src={getProductImage(item)}
+                          alt={item.name}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                          priority={index < 4} // Prioritize loading for the first few images
+                        />
                       <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
                         {item.quantity}
                       </div>

@@ -10,6 +10,7 @@ import axios from 'axios';
 import Sidebar from '@/components/layout/Sidebar';
 import { useCart } from '@/context/CartContext';
 import Image from 'next/image';
+import LogoutConfirmModal from '@/components/LogoutConfirmModal';
 
 interface User {
   id: string;
@@ -75,6 +76,7 @@ export default function AdminDashboard() {
   const [errors, setErrors] = useState<FormErrors>({});
   const { logout } = useCart();
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in and is admin
@@ -276,9 +278,16 @@ export default function AdminDashboard() {
   };
 
   const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
     logout();
+    setShowLogoutModal(false);
     router.push('/login');
   };
+
+  const cancelLogout = () => setShowLogoutModal(false);
 
   const handleStaffLogin = async (staff: StaffMember) => {
     try {
@@ -576,6 +585,7 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+      <LogoutConfirmModal open={showLogoutModal} onConfirm={confirmLogout} onCancel={cancelLogout} />
     </div>
   );
 }

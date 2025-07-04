@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 import { createOnlineOrder, CreateOrderData } from '@/services/orders';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
+import Loader from '@/components/Loader';
+import type { CartItem } from '@/context/CartContext';
 
 interface CustomerInfo {
   name: string;
@@ -94,9 +96,9 @@ const cardTypes = {
 };
 
 export default function PaymentPage() {
-  const { cartItems, clearCart, isLoggedIn, hasHydrated } = useCart();
+  const { cartItems, clearCart, hasHydrated } = useCart();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     name: '',
@@ -126,51 +128,17 @@ export default function PaymentPage() {
   const cardConfig = cardTypes[currentCardType as keyof typeof cardTypes];
 
   // Function to get the correct image URL
-  const getProductImage = (product: any) => {
-    // Handle cart items that only have image property
-    if (product.image && !product.images) {
+  const getProductImage = (product: CartItem) => {
       const imagePath = product.image;
       if (!imagePath) {
         return '/images/package.png';
       }
-      // If it's already a full URL, return it
       if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
         return imagePath;
-      }
-      // If it's a relative path, construct the full URL
-      const filename = imagePath.replace(/\\/g, '/').split('/').pop();
-      const fullUrl = `http://localhost:8000/uploads/products/${filename}`;
-      return fullUrl;
-    }
-    
-    // Handle product objects with images array
-    const imagePath = product.images && product.images.length > 0 ? product.images[0] : product.image;
-    if (!imagePath) {
-      return '/images/package.png';
     }
     const filename = imagePath.replace(/\\/g, '/').split('/').pop();
     const fullUrl = `http://localhost:8000/uploads/products/${filename}`;
     return fullUrl;
-  };
-
-  // Function to validate and get safe image URL (fallback)
-  const getSafeImageUrl = (imageUrl: string | null | undefined): string => {
-    if (!imageUrl || imageUrl.trim() === '') {
-      return '/images/package.png';
-    }
-    try {
-      if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-        new URL(imageUrl);
-        return imageUrl;
-      }
-      if (imageUrl.startsWith('/')) {
-        return imageUrl;
-      }
-      return `/${imageUrl}`;
-    } catch (error) {
-      console.warn('Invalid image URL:', imageUrl);
-      return '/images/package.png';
-    }
   };
 
   // Format card number with spaces
@@ -319,7 +287,12 @@ export default function PaymentPage() {
       console.log('Redirecting to products page - cart is empty and order not placed');
       router.push('/products');
     }
+    setLoading(false);
   }, [hasHydrated, cartItems.length, router, orderPlaced]);
+
+  if (loading) {
+    return <Loader />;
+  }
 
   if (!hasHydrated) return null;
   if (cartItems.length === 0) {

@@ -1,12 +1,12 @@
 "use client"
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import "keen-slider/keen-slider.min.css"
 import { useKeenSlider } from "keen-slider/react"
 import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import Image from "next/image"
 import React from "react"
+import "keen-slider/keen-slider.min.css"
 
 export default function CategoryCards() {
   const categories = [

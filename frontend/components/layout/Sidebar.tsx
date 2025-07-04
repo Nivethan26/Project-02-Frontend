@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { 
   Home, 
   BarChart3, 
@@ -21,6 +21,7 @@ import {
   Bell
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import LogoutConfirmModal from '@/components/LogoutConfirmModal';
 
 interface SidebarProps {
   role: string;
@@ -30,6 +31,7 @@ export default function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { logout } = useCart();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const isActive = (path: string) => {
     return pathname === path;
@@ -58,7 +60,8 @@ export default function Sidebar({ role }: SidebarProps) {
         { href: '/dashboard/admin/inventory', label: 'Inventory', icon: Package },
         // { href: '/dashboard/admin/delivery', label: 'Delivery', icon: Truck },
         { href: '/dashboard/admin/reports', label: 'Reports', icon: Activity },
-        { href: '/dashboard/admin/doctors', label: 'Doctors', icon: Stethoscope }
+        { href: '/dashboard/admin/doctors', label: 'Doctors', icon: Stethoscope },
+        { href: '/dashboard/admin/message', label: 'Notification', icon: Bell }
       );
     }
 
@@ -93,8 +96,17 @@ export default function Sidebar({ role }: SidebarProps) {
   const links = role === 'customer' ? getCustomerLinks() : getStaffLinks();
 
   const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
     logout();
+    setShowLogoutModal(false);
     router.push('/');
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutModal(false);
   };
 
   return (
@@ -180,6 +192,7 @@ export default function Sidebar({ role }: SidebarProps) {
           </div>
         </div>
       </div>
+      <LogoutConfirmModal open={showLogoutModal} onConfirm={confirmLogout} onCancel={cancelLogout} />
     </div>
   );
 } 
