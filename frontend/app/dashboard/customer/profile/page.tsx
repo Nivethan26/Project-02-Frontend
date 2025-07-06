@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import Image from 'next/image';
 
 function getInitials(firstName?: string, lastName?: string) {
   return (firstName?.[0] || '') + (lastName?.[0] || '');
@@ -311,10 +312,11 @@ export default function CustomerProfilePage() {
                         <div className="relative inline-block mb-6">
                           {profileImage ? (
                             <div className="w-32 h-32 rounded-full overflow-hidden shadow-2xl border-4 border-slate-200">
-                              <img 
-                                src={profileImage} 
+                              <Image
+                                src={profileImage}
                                 alt={`${user.firstName} ${user.lastName}`}
-                                className="w-full h-full object-cover"
+                                fill
+                                className="object-cover w-full h-full"
                               />
                             </div>
                           ) : (

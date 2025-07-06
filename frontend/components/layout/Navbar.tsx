@@ -77,7 +77,7 @@ export default function Navbar() {
   const showPublicNav = !isStaff || pathname === '/'
 
   return (
-    <nav className="relative flex items-center px-4 md:px-16 py-4 bg-[#e3edff] w-full sticky top-0 z-50">
+    <nav className="sticky flex items-center px-4 md:px-16 py-4 bg-[#e3edff] w-full top-0 z-50">
       <Link href="/">
         <Image src="/images/logo.png" alt="SK Medicals" width={160} height={15} />
       </Link>
