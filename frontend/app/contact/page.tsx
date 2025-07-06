@@ -38,7 +38,7 @@ export default function ContactPage() {
         const data = await res.json();
         setError(data.message || 'Failed to send message.');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to send message.');
     }
     setLoading(false);
@@ -55,7 +55,7 @@ export default function ContactPage() {
         <section className="max-w-4xl mx-auto text-left mb-10">
           <p className="text-gray-600 text-lg font-semibold mb-1">Get Started</p>
           <h1 className="text-4xl font-bold text-black leading-tight">
-            Get in touch with us.<br />We're here to assist you.
+            Get in touch with us.<br />We&apos;re here to assist you.
           </h1>
         </section>
 

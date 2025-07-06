@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from 'react';
@@ -53,6 +54,20 @@ export default function OrderConfirmationPage() {
       console.warn('Invalid image URL:', imageUrl);
       return '/images/package.png';
     }
+  };
+
+  // Function to get the correct image URL for products
+  const getProductImage = (item: { image?: string }) => {
+    const imagePath = item.image;
+    if (!imagePath) {
+      return '/images/package.png';
+    }
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    const filename = imagePath.replace(/\\/g, '/').split('/').pop();
+    const fullUrl = `http://localhost:8000/uploads/products/${filename}`;
+    return fullUrl;
   };
 
   // Calculate estimated delivery date (2-3 weekdays from now)
@@ -222,17 +237,14 @@ export default function OrderConfirmationPage() {
                     style={{ animationDelay: `${700 + index * 100}ms` }}
                   >
                     <div className="relative w-20 h-20 flex-shrink-0">
-                      <Image
-                        src={getSafeImageUrl(item.image)}
-                        alt={item.name}
-                        width={80}
-                        height={80}
-                        className="w-20 h-20 object-cover rounded-xl border-2 border-gray-200 shadow-sm"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = '/images/package.png';
-                        }}
-                      />
+                    <Image
+                          src={getProductImage(item)}
+                          alt={item.name}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                          priority={index < 4} // Prioritize loading for the first few images
+                        />
                       <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
                         {item.quantity}
                       </div>
