@@ -120,8 +120,7 @@ export default function PaymentPage() {
   // Calculate totals
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = 500; // Fixed shipping cost
-  const tax = subtotal * 0.15; // 15% tax
-  const total = subtotal + shipping + tax;
+  const total = subtotal + shipping;
 
   // Get current card type
   const currentCardType = getCardType(cardInfo.cardNumber);
@@ -232,7 +231,7 @@ export default function PaymentPage() {
         paymentMethod: paymentMethod,
         subtotal: subtotal,
         shipping: shipping,
-        tax: tax,
+        tax: 0, // No tax
         total: total,
         customerId: customerId
       };
@@ -240,6 +239,51 @@ export default function PaymentPage() {
       
       const order = await createOnlineOrder(orderData);
       console.log('Order created successfully:', order);
+
+      // --- Save payment in backend payment database ---
+      // Robustly extract orderId
+      let orderId = (order as any)._id || (order as any).id || (order as any).orderId || (order as any).order?._id;
+      if (!orderId) {
+        // Recursively search for _id in the order object
+        function findId(obj: any): string | undefined {
+          if (!obj || typeof obj !== 'object') return undefined;
+          if (obj._id) return obj._id;
+          for (const key of Object.keys(obj)) {
+            const found = findId(obj[key]);
+            if (found) return found;
+          }
+          return undefined;
+        }
+        orderId = findId(order);
+        if (orderId) {
+          console.warn('OrderId found recursively:', orderId);
+        } else {
+          console.error('Could not find orderId in order creation response:', order);
+          toast.error('Could not find order ID after order creation. Payment will not be recorded.');
+        }
+      }
+      if (orderId) {
+        try {
+          await fetch('http://localhost:8000/api/payments', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${sessionStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+              orderId: orderId,
+              paymentMethod: paymentMethod,
+              amount: total,
+              paymentType: 'online'
+            })
+          });
+          toast.success('Payment recorded in database!');
+        } catch (err) {
+          toast.error('Failed to record payment in database');
+          console.error('Payment record error:', err);
+        }
+      }
+      // --- End payment save logic ---
       
       toast.success('Order placed successfully! You will receive a confirmation email shortly.');
       setOrderPlaced(true); // Set flag to prevent redirect
@@ -652,10 +696,6 @@ export default function PaymentPage() {
                   <div className="flex justify-between items-center">
                     <span className="font-medium text-slate-700">Shipping</span>
                     <span className="font-semibold text-slate-800">LKR {shipping.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-slate-700">Tax (15%)</span>
-                    <span className="font-semibold text-slate-800">LKR {tax.toFixed(2)}</span>
                   </div>
                   <div className="border-t border-slate-200 pt-3 flex justify-between items-center">
                     <span className="font-bold text-lg text-slate-800">Total</span>
