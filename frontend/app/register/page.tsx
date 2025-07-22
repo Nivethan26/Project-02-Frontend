@@ -415,7 +415,7 @@ export default function RegisterPage() {
                             errors.firstName ? 'border-red-500' : 'border-gray-300'
                           } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                             loading ? 'opacity-50 cursor-not-allowed' : ''
-                          }`}
+                          } text-black`}
                           placeholder="John"
                         />
                       </div>
@@ -442,7 +442,7 @@ export default function RegisterPage() {
                             errors.lastName ? 'border-red-500' : 'border-gray-300'
                           } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                             loading ? 'opacity-50 cursor-not-allowed' : ''
-                          }`}
+                          } text-black`}
                           placeholder="Doe"
                         />
                       </div>
@@ -469,7 +469,7 @@ export default function RegisterPage() {
                             errors.phone ? 'border-red-500' : 'border-gray-300'
                           } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                             loading ? 'opacity-50 cursor-not-allowed' : ''
-                          }`}
+                          } text-black`}
                           placeholder="+1 (555) 000-0000"
                         />
                       </div>
@@ -498,7 +498,7 @@ export default function RegisterPage() {
                           errors.email ? 'border-red-500' : 'border-gray-300'
                         } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                           loading ? 'opacity-50 cursor-not-allowed' : ''
-                        }`}
+                        } text-black`}
                         placeholder="john.doe@example.com"
                       />
                     </div>
@@ -527,7 +527,7 @@ export default function RegisterPage() {
                             errors.password ? 'border-red-500' : 'border-gray-300'
                           } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                             loading ? 'opacity-50 cursor-not-allowed' : ''
-                          }`}
+                          } text-black`}
                           placeholder="••••••••"
                         />
                       </div>
@@ -584,7 +584,7 @@ export default function RegisterPage() {
                             errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
                           } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                             loading ? 'opacity-50 cursor-not-allowed' : ''
-                          }`}
+                          } text-black`}
                           placeholder="••••••••"
                         />
                       </div>
@@ -614,7 +614,7 @@ export default function RegisterPage() {
                           errors.address ? 'border-red-500' : 'border-gray-300'
                         } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                           loading ? 'opacity-50 cursor-not-allowed' : ''
-                        }`}
+                        } text-black`}
                         placeholder="Enter your full address"
                       />
                     </div>
