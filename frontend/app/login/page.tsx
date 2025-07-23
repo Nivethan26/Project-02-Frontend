@@ -109,6 +109,11 @@ export default function LoginPage() {
         throw new Error('Your account is inactive. Please contact support.');
       }
 
+      // Save user to localStorage for session persistence
+      localStorage.setItem('user', JSON.stringify(response.user));
+      // Also store userId in sessionStorage for booking/payment
+      sessionStorage.setItem('userId', response.user._id);
+
       // Set isLoggedIn to true so CartContext fetches the cart
       setIsLoggedIn(true);
 
@@ -261,7 +266,7 @@ export default function LoginPage() {
                           errors.email ? 'border-red-500' : 'border-gray-300'
                         } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                           loading ? 'opacity-50 cursor-not-allowed' : ''
-                        }`}
+                        } text-black`}
                         placeholder="john.doe@example.com"
                       />
                     </div>
@@ -292,7 +297,7 @@ export default function LoginPage() {
                           errors.password ? 'border-red-500' : 'border-gray-300'
                         } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                           loading ? 'opacity-50 cursor-not-allowed' : ''
-                        }`}
+                        } text-black`}
                         placeholder="••••••••"
                       />
                     </div>

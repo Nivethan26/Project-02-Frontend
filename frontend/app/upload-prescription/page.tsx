@@ -223,6 +223,17 @@ export default function UploadPrescriptionPage() {
         formData.append('prescription', file);
       });
 
+      // Automatically include customerId from sessionStorage
+      const user = sessionStorage.getItem('user');
+      if (user) {
+        try {
+          const userData = JSON.parse(user);
+          if (userData._id) {
+            formData.append('customerId', userData._id);
+          }
+        } catch {}
+      }
+
       // Send the request directly to the backend
       const response = await fetch('http://localhost:8000/api/prescriptions', {
         method: 'POST',
@@ -549,7 +560,7 @@ export default function UploadPrescriptionPage() {
                         className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-800"
                       >
                         <option value="">Please select payment method</option>
-                    <option value="card">Card</option>
+                    <option value="card_payment">Card</option>
                   </select>
                 </div>
 

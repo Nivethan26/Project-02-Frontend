@@ -167,7 +167,7 @@ export default function POSPage() {
   };
 
   const getTax = () => {
-    return getSubtotal() * 0.15; // 15% tax
+    return getSubtotal() * 0.05; // 5% tax
   };
 
   const getTotal = () => {
@@ -230,6 +230,43 @@ export default function POSPage() {
       });
 
       console.log('Order created successfully:', response.data);
+      console.log('Full order response:', response.data);
+      // Find the correct orderId
+      let orderId = response.data._id || response.data.id || response.data.orderId || response.data.order?._id;
+      if (!orderId) {
+        // Recursively search for _id in the response object
+        function findId(obj: any): string | undefined {
+          if (!obj || typeof obj !== 'object') return undefined;
+          if (obj._id) return obj._id;
+          for (const key of Object.keys(obj)) {
+            const found = findId(obj[key]);
+            if (found) return found;
+          }
+          return undefined;
+        }
+        orderId = findId(response.data);
+        if (orderId) {
+          console.warn('OrderId found recursively:', orderId);
+        } else {
+          console.error('Could not find orderId in order creation response:', response.data);
+          toast.error('Could not find order ID after order creation. Payment will not be recorded.');
+        }
+      }
+      if (orderId) {
+        // Record payment in the Payment model
+        try {
+          await axios.post('http://localhost:8000/api/payments', {
+            orderId: orderId,
+            paymentMethod: paymentMethod,
+            amount: getTotal(),
+            paymentType: 'pos'
+          });
+          toast.success('Payment recorded in database!');
+        } catch (err) {
+          toast.error('Failed to record payment in database');
+          console.error('Payment record error:', err);
+        }
+      }
 
       setReceiptData({
         orderId: response.data._id || `POS-${Date.now()}`,
@@ -727,7 +764,7 @@ export default function POSPage() {
                         <span className="font-medium">Rs. {getSubtotal().toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Tax (15%):</span>
+                        <span className="text-gray-600">Tax (5%):</span>
                         <span className="font-medium">Rs. {getTax().toFixed(2)}</span>
                       </div>
                       <div className="border-t border-gray-300 pt-3">
@@ -855,7 +892,7 @@ export default function POSPage() {
                         <span className="font-medium">Rs. {receiptData.subtotal.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Tax (15%):</span>
+                        <span className="text-gray-600">Tax (5%):</span>
                         <span className="font-medium">Rs. {receiptData.tax.toFixed(2)}</span>
                       </div>
                       <div className="border-t border-gray-300 pt-2">

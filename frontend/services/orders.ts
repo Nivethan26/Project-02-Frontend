@@ -7,6 +7,7 @@ export interface OrderItem {
   price: number;
   quantity: number;
   image?: string | null;
+  customizationConfirmed?: boolean;
 }
 
 export interface Order {
@@ -37,6 +38,7 @@ export interface Order {
   orderType?: string;
   customerId?: string;
   description?: string;
+  customizationConfirmed?: boolean;
 }
 
 export interface CreateOrderData {
@@ -55,6 +57,23 @@ export interface CreateOrderData {
   tax: number;
   total: number;
   customerId?: string;
+}
+
+export interface PrescriptionOrder {
+  _id: string;
+  prescriptionNumber?: string;
+  date?: string;
+  createdAt?: string;
+  confirmed?: boolean;
+  prescriptionImage?: string;
+  doctorName?: string;
+  items?: any[]; // adjust as per your model
+  shippingAddress?: string;
+  totalAmount?: number;
+  status?: string;
+  paymentMethod?: string;
+  estimatedDelivery?: string;
+  type?: 'prescription';
 }
 
 // Get customer orders
@@ -96,6 +115,11 @@ export const getCustomerOrders = async (customerId?: string, email?: string, pho
 
     console.log('=== FRONTEND GET CUSTOMER ORDERS SUCCESS ===');
     console.log('Orders received:', result.data);
+    // Log prescription orders specifically
+    if (Array.isArray(result.data)) {
+      const prescriptionOrders = result.data.filter((order: any) => order.orderType === 'prescription');
+      console.log('Prescription orders:', prescriptionOrders);
+    }
     return result.data;
   } catch (error) {
     console.error('=== FRONTEND GET CUSTOMER ORDERS ERROR ===');
@@ -276,4 +300,24 @@ export const getAllOrders = async (params: {
     console.error('Error fetching all orders:', error);
     throw error;
   }
+};
+
+export const getCustomerPrescriptionOrders = async (customerId: string, email?: string, phone?: string): Promise<PrescriptionOrder[]> => {
+  const params = new URLSearchParams();
+  if (customerId) params.append('customerId', customerId);
+  if (email) params.append('email', email);
+  if (phone) params.append('phone', phone);
+  params.append('orderType', 'prescription'); // Always filter for prescription orders
+
+  const url = `${API_BASE_URL}/prescriptions/customer?${params.toString()}`;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  if (!response.ok) throw new Error('Failed to fetch prescription orders');
+  const result = await response.json();
+  // If your backend wraps data in a success/data object, adjust accordingly
+  return result.data || result;
 }; 
