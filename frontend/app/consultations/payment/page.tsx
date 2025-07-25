@@ -101,25 +101,28 @@ export default function DoctorPaymentPage() {
     setLoading(true);
   
     try {
-      // Get the logged-in user (customer)
       const userStr = localStorage.getItem("user") || sessionStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : null;
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      console.log("User object from storage:", user);
+  
       if (!user || !user.id) {
         setError("User not found. Please log in again.");
         setLoading(false);
         return;
       }
-
-      // Build the payload with correct user and doctorId
+  
+      // ✅ Generate a mock paymentIntentId
+      const paymentIntentId = `pi_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+  
       const payload = {
         doctorId: booking.doctorId,
         date: booking.date,
         time: booking.time,
         amount: booking.fee,
-        method: "card"
+        method: "card",
+        paymentIntentId  // ✅ crucial for preventing duplicate error
       };
+  
       console.log("Booking payload:", JSON.stringify(payload, null, 2));
   
       const response = await axios.post("http://localhost:8000/api/consultation/confirmation", payload, {
@@ -127,7 +130,7 @@ export default function DoctorPaymentPage() {
           Authorization: `Bearer ${token}`
         }
       });
-
+  
       if (response.status === 201) {
         const bookingId = response.data.consultation?._id || response.data.bookingId;
         router.push(`/consultations/confirmation?bookingId=${bookingId}`);
@@ -147,6 +150,7 @@ export default function DoctorPaymentPage() {
       setLoading(false);
     }
   };
+  
   
 
   // Find the slot object for the selected date
