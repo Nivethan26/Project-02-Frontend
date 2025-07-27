@@ -478,7 +478,7 @@ export default function AdminDashboard() {
                       required
                       value={formData.firstName}
                       onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.firstName ? 'border-red-300' : ''}`}
+                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.firstName ? 'border-red-300' : ''} text-black`}
                     />
                     {errors.firstName && (
                       <p className="mt-1 text-xs text-red-600">{errors.firstName}</p>
@@ -491,7 +491,7 @@ export default function AdminDashboard() {
                       required
                       value={formData.lastName}
                       onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.lastName ? 'border-red-300' : ''}`}
+                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.lastName ? 'border-red-300' : ''} text-black`}
                     />
                     {errors.lastName && (
                       <p className="mt-1 text-xs text-red-600">{errors.lastName}</p>
@@ -504,7 +504,7 @@ export default function AdminDashboard() {
                       required
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.email ? 'border-red-300' : ''}`}
+                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.email ? 'border-red-300' : ''} text-black`}
                     />
                     {errors.email && (
                       <p className="mt-1 text-xs text-red-600">{errors.email}</p>
@@ -518,7 +518,7 @@ export default function AdminDashboard() {
                         required
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.password ? 'border-red-300' : ''}`}
+                        className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.password ? 'border-red-300' : ''} text-black`}
                       />
                       {errors.password && (
                         <p className="mt-1 text-xs text-red-600">{errors.password}</p>
@@ -532,7 +532,7 @@ export default function AdminDashboard() {
                       required
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.phone ? 'border-red-300' : ''}`}
+                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.phone ? 'border-red-300' : ''} text-black`}
                     />
                     {errors.phone && (
                       <p className="mt-1 text-xs text-red-600">{errors.phone}</p>
@@ -545,7 +545,7 @@ export default function AdminDashboard() {
                       required
                       value={formData.address}
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.address ? 'border-red-300' : ''}`}
+                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.address ? 'border-red-300' : ''} text-black`}
                     />
                     {errors.address && (
                       <p className="mt-1 text-xs text-red-600">{errors.address}</p>
@@ -557,7 +557,7 @@ export default function AdminDashboard() {
                       required
                       value={formData.role}
                       onChange={(e) => setFormData({ ...formData, role: e.target.value as 'pharmacist' | 'doctor' | 'delivery' })}
-                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.role ? 'border-red-300' : ''}`}
+                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.role ? 'border-red-300' : ''} text-black`}
                     >
                       <option value="pharmacist">Pharmacist</option>
                       <option value="doctor">Doctor</option>
@@ -574,7 +574,7 @@ export default function AdminDashboard() {
                         type="text"
                         value={formData.speciality}
                         onChange={e => setFormData({ ...formData, speciality: e.target.value })}
-                        className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2"
+                        className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 text-black"
                         required={formData.role === 'doctor'}
                       />
                     </div>
