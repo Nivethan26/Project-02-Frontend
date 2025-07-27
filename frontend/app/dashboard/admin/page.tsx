@@ -10,7 +10,8 @@ import axios from 'axios';
 import Sidebar from '@/components/layout/Sidebar';
 import { useCart } from '@/context/CartContext';
 import Image from 'next/image';
-import LogoutConfirmModal from '@/components/LogoutConfirmModal';
+import ConfirmModal from '@/components/LogoutConfirmModal';
+import StaffDeleteModal from '@/components/StaffDeleteModal';
 
 interface User {
   id: string;
@@ -77,6 +78,8 @@ export default function AdminDashboard() {
   const { logout } = useCart();
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [staffToDelete, setStaffToDelete] = useState<StaffMember | null>(null);
 
   useEffect(() => {
     // Check if user is logged in and is admin
@@ -239,19 +242,31 @@ export default function AdminDashboard() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this staff member?')) {
-      try {
-        const token = sessionStorage.getItem('token');
-        await axios.delete(`http://localhost:8000/api/admin/staff/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        toast.success('Staff member deleted successfully');
-        fetchStaffMembers();
-      } catch (error) {
-        toast.error('Failed to delete staff member');
-      }
+  const handleDeleteClick = (member: StaffMember) => {
+    setStaffToDelete(member);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!staffToDelete) return;
+    try {
+      const token = sessionStorage.getItem('token');
+      await axios.delete(`http://localhost:8000/api/admin/staff/${staffToDelete._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Staff member deleted successfully');
+      fetchStaffMembers();
+    } catch (error) {
+      toast.error('Failed to delete staff member');
+    } finally {
+      setShowDeleteModal(false);
+      setStaffToDelete(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setStaffToDelete(null);
   };
 
   const resetForm = () => {
@@ -379,7 +394,7 @@ export default function AdminDashboard() {
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDelete(member._id)}
+                        onClick={() => handleDeleteClick(member)}
                         className="text-red-600 hover:text-red-900"
                       >
                         Delete
@@ -585,7 +600,19 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
-      <LogoutConfirmModal open={showLogoutModal} onConfirm={confirmLogout} onCancel={cancelLogout} />
+      <ConfirmModal 
+        open={showLogoutModal}
+        title="Are you sure you want to logout?"
+        message="You will need to log in again to access your account."
+        onConfirm={confirmLogout}
+        onCancel={cancelLogout}
+      />
+      <StaffDeleteModal
+        open={showDeleteModal}
+        staffName={staffToDelete ? `${staffToDelete.firstName} ${staffToDelete.lastName}` : undefined}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </div>
   );
 }
