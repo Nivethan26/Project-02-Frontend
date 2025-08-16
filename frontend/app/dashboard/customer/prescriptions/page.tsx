@@ -240,19 +240,29 @@ export default function CustomerPrescriptionsPage() {
   const createReminder = async (date?: string, time?: string) => {
     if (!order) return;
     try {
+      const userInfo = sessionStorage.getItem('user');
+      if (!userInfo) {
+        showToast('User information not found. Please login again.', 'error');
+        return;
+      }
+      const user = JSON.parse(userInfo);
+      
       const response = await fetch('http://localhost:8000/api/reminders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           orderId: order.id,
+          userId: user.email,
           reminderDate: date,
           reminderTime: time,
-          // Add more fields as needed
+          status: 'active',
+          notes: `Reminder for order ${order.orderNumber} - ${order.items.map(item => item.name).join(', ')}`
         }),
       });
       if (!response.ok) throw new Error('Failed to create reminder');
-      showToast('Reminder set!', 'success');
+      showToast('Reminder set successfully!', 'success');
     } catch (error) {
+      console.error('Error creating reminder:', error);
       showToast('Failed to set reminder', 'error');
     }
   };
@@ -349,6 +359,9 @@ export default function CustomerPrescriptionsPage() {
   const subtotal = order?.subtotal ?? order?.items.reduce((sum, item) => sum + item.price * item.quantity, 0) ?? 0;
   const shipping = order?.shipping ?? 500;
   const total = subtotal + shipping;
+  
+  // Disable action buttons when order has a workflow status
+  const isActionDisabled = !!(order && ['processing','shipped','delivered','completed','cancelled'].includes(order.status));
 
   return (
     <ProtectedRoute role="customer">
@@ -512,32 +525,39 @@ export default function CustomerPrescriptionsPage() {
 
                               
                               <div className="flex justify-between text-gray-900 text-lg mt-4 border-t pt-4"><span>Total:</span> <span className="font-bold text-blue-700">LKR {total.toFixed(2)}</span></div>
-                              {order && !order.customizationConfirmed && (
+                              <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                                {order && !order.customizationConfirmed && (
+                                  <button
+                                    className={`flex-1 sm:flex-none inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-white font-semibold shadow-md transition-all duration-150 ${isActionDisabled ? 'bg-green-600/60 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 hover:shadow-lg active:scale-[0.98]'}`}
+                                    onClick={() => setShowReminderPopup(true)}
+                                    disabled={isActionDisabled || pendingOrderConfirmation}
+                                    title={isActionDisabled ? 'This action is disabled for current order status' : 'Confirm this order'}
+                                  >
+                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                    Confirm Order
+                                  </button>
+                                )}
                                 <button
-                                  className="mt-6 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors font-semibold shadow"
-                                  onClick={() => setShowReminderPopup(true)}
+                                  className={`flex-1 sm:flex-none inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-white font-semibold shadow-md transition-all duration-150 ${isActionDisabled ? 'bg-red-600/60 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700 hover:shadow-lg active:scale-[0.98]'}`}
+                                  onClick={async () => {
+                                    if (!window.confirm('Are you sure you want to cancel and delete this order?')) return;
+                                    try {
+                                      const response = await fetch(`http://localhost:8000/api/orders/${order.id}`, { method: 'DELETE' });
+                                      if (!response.ok) throw new Error('Failed to delete order');
+                                      showToast('Order cancelled and deleted', 'success');
+                                      setOrder(null);
+                                      setShowModal(false);
+                                    } catch (error) {
+                                      showToast('Failed to delete order', 'error');
+                                    }
+                                  }}
+                                  disabled={isActionDisabled || pendingOrderConfirmation}
+                                  title={isActionDisabled ? 'This action is disabled for current order status' : 'Cancel and delete this order'}
                                 >
-                                  Confirm Order
+                                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                  Cancel Order
                                 </button>
-                              )}
-                              <button
-                                className="mt-6 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors font-semibold shadow"
-                                onClick={async () => {
-                                  if (!window.confirm('Are you sure you want to cancel and delete this order?')) return;
-                                  try {
-                                    const response = await fetch(`http://localhost:8000/api/orders/${order.id}`, { method: 'DELETE' });
-                                    if (!response.ok) throw new Error('Failed to delete order');
-                                    showToast('Order cancelled and deleted', 'success');
-                                    setOrder(null);
-                                    setShowModal(false);
-                                    // Optionally, refresh prescriptions/orders list here
-                                  } catch (error) {
-                                    showToast('Failed to delete order', 'error');
-                                  }
-                                }}
-                              >
-                                Cancel Order
-                              </button>
+                              </div>
                             </>
                           ) : (
                             <div className="text-gray-500">No order found for this prescription.</div>
@@ -641,29 +661,55 @@ export default function CustomerPrescriptionsPage() {
           )}
           {showReminderPopup && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-              <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center">
-                <h2 className="text-xl font-semibold mb-4">Set a Reminder?</h2>
-                <p className="mb-6">Do you want to set a reminder for these medicines again?</p>
-                <div className="flex justify-center gap-4">
+              <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4">
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Set Medication Reminder</h2>
+                  <p className="text-gray-600">Would you like to set a reminder for your medications?</p>
+                </div>
+                
+                {order && (
+                  <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+                    <p className="text-sm font-medium text-gray-700 mb-2">Medications in this order:</p>
+                    <div className="space-y-1">
+                      {order.items.map((item, index) => (
+                        <div key={index} className="flex items-center gap-2 text-sm text-gray-600">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                          <span>{item.name}</span>
+                          <span className="text-gray-500">(Qty: {item.quantity})</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex flex-col sm:flex-row gap-3">
                   <button
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-lg"
                     onClick={() => {
                       setShowReminderPopup(false);
                       setShowDateTimePicker(true);
                     }}
                     disabled={pendingOrderConfirmation}
                   >
-                    Yes
+                    <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Set Reminder
                   </button>
                   <button
-                    className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+                    className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-semibold"
                     onClick={() => {
                       setShowReminderPopup(false);
                       setShowPaymentModal(true);
                     }}
                     disabled={pendingOrderConfirmation}
                   >
-                    No
+                    Skip for Now
                   </button>
                 </div>
               </div>
@@ -671,41 +717,67 @@ export default function CustomerPrescriptionsPage() {
           )}
           {showDateTimePicker && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-              <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center">
-                <h2 className="text-xl font-semibold mb-4">Set Reminder Date & Time</h2>
-                <div className="mb-4">
-                  <input
-                    type="date"
-                    className="border rounded px-3 py-2 w-full mb-2"
-                    value={reminderDate}
-                    onChange={e => setReminderDate(e.target.value)}
-                  />
-                  <input
-                    type="time"
-                    className="border rounded px-3 py-2 w-full"
-                    value={reminderTime}
-                    onChange={e => setReminderTime(e.target.value)}
-                  />
+              <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4">
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Set Reminder Schedule</h2>
+                  <p className="text-gray-600">Choose when you'd like to be reminded</p>
                 </div>
-                <div className="flex justify-center gap-4">
+                
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Reminder Date</label>
+                    <input
+                      type="date"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      value={reminderDate}
+                      onChange={e => setReminderDate(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Reminder Time</label>
+                    <input
+                      type="time"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      value={reminderTime}
+                      onChange={e => setReminderTime(e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-3">
                   <button
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={async () => {
                       setShowDateTimePicker(false);
                       await handleReminderResponse(true, reminderDate, reminderTime);
                     }}
                     disabled={!reminderDate || !reminderTime || pendingOrderConfirmation}
                   >
-                    Set Reminder
+                    <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Confirm Reminder
                   </button>
                   <button
-                    className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+                    className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-semibold"
                     onClick={() => setShowDateTimePicker(false)}
                     disabled={pendingOrderConfirmation}
                   >
                     Cancel
                   </button>
                 </div>
+                
+                {(!reminderDate || !reminderTime) && (
+                  <p className="text-sm text-gray-500 mt-4 text-center">
+                    Please select both date and time to continue
+                  </p>
+                )}
               </div>
             </div>
           )}

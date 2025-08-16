@@ -44,6 +44,7 @@ export default function Sidebar({ role }: SidebarProps) {
       { href: '/dashboard/customer/consultations', label: 'Consultations', icon: Stethoscope },
       { href: '/dashboard/customer/prescriptions', label: 'My Prescriptions', icon: Pill },
       { href: '/dashboard/customer/orders', label: 'My Orders', icon: ShoppingCart },
+      { href: '/dashboard/customer/reminders', label: 'Reminders', icon: Bell },
       { href: '/dashboard/customer/profile', label: 'Profile', icon: User },
     ];
   };
