@@ -9,6 +9,7 @@ import CommitmentSection from "@/components/CommitmentSection"
 import TestimonialSection from "@/components/TestimonialSection"
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import ChatWidget from '@/components/ChatWidget';
 
 
 export default function Home() {
@@ -24,6 +25,7 @@ export default function Home() {
       {/*<ServicesSection />
       <TeamSection />*/}
       <TestimonialSection />
+      <ChatWidget />
       <Footer />
     </div>
   )
