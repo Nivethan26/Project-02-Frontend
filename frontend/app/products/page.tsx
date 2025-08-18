@@ -13,6 +13,7 @@ import Loader from '@/components/Loader';
 // List of categories (should match sidebar)
 const categories = [
   'All',
+  'Medicine',
   'Adult Care',
   'Diabetic Care',
   'Hair Care',
@@ -34,6 +35,7 @@ const categories = [
 
 // Mapping from display name to backend value
 const categoryValueMap: { [key: string]: string } = {
+  'Medicine' : 'medicine',
   'Adult Care': 'adult_care',
   'Diabetic Care': 'diabetic_care',
   'Hair Care': 'hair_care',

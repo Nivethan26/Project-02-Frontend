@@ -520,6 +520,7 @@ export default function InventoryPage() {
                       required
                     >
                       <option value="">Select a category</option>
+                      <option value="medicine">Medicine</option>
                       <option value="adult_care">Adult Care</option>
                       <option value="diabetic_care">Diabetic Care</option>
                       <option value="hair_care">Hair Care</option>
