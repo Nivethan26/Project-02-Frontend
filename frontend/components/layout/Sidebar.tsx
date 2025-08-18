@@ -61,6 +61,7 @@ export default function Sidebar({ role }: SidebarProps) {
         { href: '/dashboard/admin/inventory', label: 'Inventory', icon: Package },
         // { href: '/dashboard/admin/delivery', label: 'Delivery', icon: Truck },
         { href: '/dashboard/admin/reports', label: 'Reports', icon: Activity },
+        { href: '/dashboard/admin/revenue', label: 'Revenue', icon: BarChart3 },
         { href: '/dashboard/admin/doctors', label: 'Doctors', icon: Stethoscope },
         { href: '/dashboard/admin/message', label: 'Notification', icon: Bell }
       );
