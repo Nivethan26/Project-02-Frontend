@@ -30,6 +30,7 @@ interface InventoryFormModalProps {
 }
 
 const categoryValueMap: { [key: string]: string } = {
+    'Medicine' : 'medicine',
     'Adult Care': 'adult_care',
     'Diabetic Care': 'diabetic_care',
     'Hair Care': 'hair_care',
