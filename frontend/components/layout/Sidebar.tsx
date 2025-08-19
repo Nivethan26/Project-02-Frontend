@@ -44,6 +44,7 @@ export default function Sidebar({ role }: SidebarProps) {
       { href: '/dashboard/customer/consultations', label: 'Consultations', icon: Stethoscope },
       { href: '/dashboard/customer/prescriptions', label: 'My Prescriptions', icon: Pill },
       { href: '/dashboard/customer/orders', label: 'My Orders', icon: ShoppingCart },
+      { href: '/dashboard/customer/reminders', label: 'Reminders', icon: Bell },
       { href: '/dashboard/customer/profile', label: 'Profile', icon: User },
     ];
   };
@@ -60,6 +61,7 @@ export default function Sidebar({ role }: SidebarProps) {
         { href: '/dashboard/admin/inventory', label: 'Inventory', icon: Package },
         // { href: '/dashboard/admin/delivery', label: 'Delivery', icon: Truck },
         { href: '/dashboard/admin/reports', label: 'Reports', icon: Activity },
+        { href: '/dashboard/admin/revenue', label: 'Revenue', icon: BarChart3 },
         { href: '/dashboard/admin/doctors', label: 'Doctors', icon: Stethoscope },
         { href: '/dashboard/admin/message', label: 'Notification', icon: Bell }
       );
