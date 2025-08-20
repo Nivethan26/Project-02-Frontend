@@ -129,7 +129,7 @@ function BookingModal({ doctor, open, onClose, user }: BookingModalProps & { use
           </div>
           <div className="mb-3">
             <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded px-3 py-2 text-xs font-semibold shadow-sm">
-              1000rs fee will be charged for booking.<br />May I confirm your booking?
+            A fee of Rs.1000 will be charged for your booking. Do you want to confirm your appointment?
             </div>
           </div>
           <button className="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg font-bold text-base shadow hover:from-blue-700 hover:to-blue-600 transition mt-2" disabled={!selectedDate || !selectedTime} onClick={handleConfirmBooking}>
