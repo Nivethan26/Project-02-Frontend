@@ -25,6 +25,7 @@ export interface User {
   profileImage?: string;
   phone?: string;
   address?: string;
+  city?: string;
   speciality?: string;
 }
 
