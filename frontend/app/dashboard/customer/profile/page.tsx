@@ -32,7 +32,7 @@ function getInitials(firstName?: string, lastName?: string) {
 }
 
 export default function CustomerProfilePage() {
-  const [user, setUser] = useState<User & { phone?: string; address?: string } | null>(null);
+  const [user, setUser] = useState<User & { phone?: string; address?: string; city?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -45,7 +45,7 @@ export default function CustomerProfilePage() {
   const [showDelete, setShowDelete] = useState(false);
 
   // Edit profile state
-  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', address: '' });
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', address: '', city: '' });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
@@ -71,6 +71,7 @@ export default function CustomerProfilePage() {
           email: profile.email || '',
           phone: profile.phone || '',
           address: profile.address || '',
+          city: profile.city || '',
         });
         // Set profile image if available
         if (profile.profileImage) {
@@ -161,8 +162,8 @@ export default function CustomerProfilePage() {
     setSaveError(null);
     setSaveSuccess(null);
     try {
-      const updated = await authService.updateProfile(form);
-      setUser(updated);
+  const updated = await authService.updateProfile(form);
+  setUser(updated);
       setSaveSuccess('Profile updated successfully!');
       setTimeout(() => setShowEdit(false), 1500);
     } catch {
@@ -423,10 +424,19 @@ export default function CustomerProfilePage() {
                               <MapPin className="w-5 h-5 text-amber-600" />
                             </div>
                             <div className="flex-1">
+                              <p className="text-sm font-medium text-slate-600">City</p>
+                              <p className="text-sm font-semibold text-slate-900">{user.city || 'Not provided'}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-4 p-4 bg-slate-50 rounded-xl">
+                            <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                              <MapPin className="w-5 h-5 text-amber-600" />
+                            </div>
+                            <div className="flex-1">
                               <p className="text-sm font-medium text-slate-600">Address</p>
                               <p className="text-sm font-semibold text-slate-900">{user.address || 'Not provided'}</p>
-            </div>
-          </div>
+                            </div>
+                          </div>
 
                           {/* <div className="flex items-center space-x-4 p-4 bg-slate-50 rounded-xl">
                             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -538,14 +548,23 @@ export default function CustomerProfilePage() {
                   />
                   </div>
                   <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Address</label>
-                  <input 
-                    name="address" 
-                    value={form.address} 
-                    onChange={handleChange} 
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition" 
-                  />
-                </div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">City</label>
+                    <input 
+                      name="city" 
+                      value={form.city} 
+                      onChange={handleChange} 
+                      className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Address</label>
+                    <input 
+                      name="address" 
+                      value={form.address} 
+                      onChange={handleChange} 
+                      className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition" 
+                    />
+                  </div>
 
                 {saveError && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3">
