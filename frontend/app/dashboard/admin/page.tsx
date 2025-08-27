@@ -10,6 +10,8 @@ import axios from 'axios';
 import Sidebar from '@/components/layout/Sidebar';
 import { useCart } from '@/context/CartContext';
 import Image from 'next/image';
+import ConfirmModal from '@/components/LogoutConfirmModal';
+import StaffDeleteModal from '@/components/StaffDeleteModal';
 
 interface User {
   id: string;
@@ -75,6 +77,9 @@ export default function AdminDashboard() {
   const [errors, setErrors] = useState<FormErrors>({});
   const { logout } = useCart();
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [staffToDelete, setStaffToDelete] = useState<StaffMember | null>(null);
 
   useEffect(() => {
     // Check if user is logged in and is admin
@@ -237,19 +242,31 @@ export default function AdminDashboard() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this staff member?')) {
-      try {
-        const token = sessionStorage.getItem('token');
-        await axios.delete(`http://localhost:8000/api/admin/staff/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        toast.success('Staff member deleted successfully');
-        fetchStaffMembers();
-      } catch (error) {
-        toast.error('Failed to delete staff member');
-      }
+  const handleDeleteClick = (member: StaffMember) => {
+    setStaffToDelete(member);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!staffToDelete) return;
+    try {
+      const token = sessionStorage.getItem('token');
+      await axios.delete(`http://localhost:8000/api/admin/staff/${staffToDelete._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Staff member deleted successfully');
+      fetchStaffMembers();
+    } catch (error) {
+      toast.error('Failed to delete staff member');
+    } finally {
+      setShowDeleteModal(false);
+      setStaffToDelete(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setStaffToDelete(null);
   };
 
   const resetForm = () => {
@@ -276,9 +293,16 @@ export default function AdminDashboard() {
   };
 
   const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
     logout();
+    setShowLogoutModal(false);
     router.push('/login');
   };
+
+  const cancelLogout = () => setShowLogoutModal(false);
 
   const handleStaffLogin = async (staff: StaffMember) => {
     try {
@@ -370,7 +394,7 @@ export default function AdminDashboard() {
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDelete(member._id)}
+                        onClick={() => handleDeleteClick(member)}
                         className="text-red-600 hover:text-red-900"
                       >
                         Delete
@@ -454,7 +478,7 @@ export default function AdminDashboard() {
                       required
                       value={formData.firstName}
                       onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.firstName ? 'border-red-300' : ''}`}
+                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.firstName ? 'border-red-300' : ''} text-black`}
                     />
                     {errors.firstName && (
                       <p className="mt-1 text-xs text-red-600">{errors.firstName}</p>
@@ -467,7 +491,7 @@ export default function AdminDashboard() {
                       required
                       value={formData.lastName}
                       onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.lastName ? 'border-red-300' : ''}`}
+                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.lastName ? 'border-red-300' : ''} text-black`}
                     />
                     {errors.lastName && (
                       <p className="mt-1 text-xs text-red-600">{errors.lastName}</p>
@@ -480,7 +504,7 @@ export default function AdminDashboard() {
                       required
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.email ? 'border-red-300' : ''}`}
+                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.email ? 'border-red-300' : ''} text-black`}
                     />
                     {errors.email && (
                       <p className="mt-1 text-xs text-red-600">{errors.email}</p>
@@ -494,7 +518,7 @@ export default function AdminDashboard() {
                         required
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.password ? 'border-red-300' : ''}`}
+                        className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.password ? 'border-red-300' : ''} text-black`}
                       />
                       {errors.password && (
                         <p className="mt-1 text-xs text-red-600">{errors.password}</p>
@@ -508,7 +532,7 @@ export default function AdminDashboard() {
                       required
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.phone ? 'border-red-300' : ''}`}
+                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.phone ? 'border-red-300' : ''} text-black`}
                     />
                     {errors.phone && (
                       <p className="mt-1 text-xs text-red-600">{errors.phone}</p>
@@ -521,7 +545,7 @@ export default function AdminDashboard() {
                       required
                       value={formData.address}
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.address ? 'border-red-300' : ''}`}
+                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.address ? 'border-red-300' : ''} text-black`}
                     />
                     {errors.address && (
                       <p className="mt-1 text-xs text-red-600">{errors.address}</p>
@@ -533,7 +557,7 @@ export default function AdminDashboard() {
                       required
                       value={formData.role}
                       onChange={(e) => setFormData({ ...formData, role: e.target.value as 'pharmacist' | 'doctor' | 'delivery' })}
-                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.role ? 'border-red-300' : ''}`}
+                      className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 ${errors.role ? 'border-red-300' : ''} text-black`}
                     >
                       <option value="pharmacist">Pharmacist</option>
                       <option value="doctor">Doctor</option>
@@ -550,7 +574,7 @@ export default function AdminDashboard() {
                         type="text"
                         value={formData.speciality}
                         onChange={e => setFormData({ ...formData, speciality: e.target.value })}
-                        className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2"
+                        className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base px-3 py-2 text-black"
                         required={formData.role === 'doctor'}
                       />
                     </div>
@@ -576,6 +600,19 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+      <ConfirmModal 
+        open={showLogoutModal}
+        title="Are you sure you want to logout?"
+        message="You will need to log in again to access your account."
+        onConfirm={confirmLogout}
+        onCancel={cancelLogout}
+      />
+      <StaffDeleteModal
+        open={showDeleteModal}
+        staffName={staffToDelete ? `${staffToDelete.firstName} ${staffToDelete.lastName}` : undefined}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </div>
   );
 }

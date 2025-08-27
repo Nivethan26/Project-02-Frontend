@@ -8,10 +8,12 @@ import Navbar from '@/components/layout/Navbar';
 import CartSidebar from '@/components/CartSidebar';
 import { toast } from 'react-hot-toast';
 import { useCart } from '@/context/CartContext';
+import Loader from '@/components/Loader';
 
 // List of categories (should match sidebar)
 const categories = [
   'All',
+  'Medicine',
   'Adult Care',
   'Diabetic Care',
   'Hair Care',
@@ -33,6 +35,7 @@ const categories = [
 
 // Mapping from display name to backend value
 const categoryValueMap: { [key: string]: string } = {
+  'Medicine' : 'medicine',
   'Adult Care': 'adult_care',
   'Diabetic Care': 'diabetic_care',
   'Hair Care': 'hair_care',
@@ -94,6 +97,8 @@ export default function ProductPage() {
 
   // Add this at the top of your component:
   const [isPriceDropdownOpen, setIsPriceDropdownOpen] = useState(false);
+  const [isPrescriptionDropdownOpen, setIsPrescriptionDropdownOpen] = useState(false);
+  const [selectedPrescription, setSelectedPrescription] = useState('');
 
   // Helper function to get the correct image URL
   const getProductImage = (product: InventoryItem) => {
@@ -272,6 +277,13 @@ export default function ProductPage() {
         break;
     }
 
+    // Apply prescription filter
+    if (selectedPrescription === 'Prescription Required') {
+      filteredProducts = filteredProducts.filter(product => product.prescription === 'required');
+    } else if (selectedPrescription === 'No Prescription Needed') {
+      filteredProducts = filteredProducts.filter(product => product.prescription === 'not_required');
+    }
+
     return filteredProducts;
   };
 
@@ -285,79 +297,7 @@ export default function ProductPage() {
   if (!hasHydrated) return null;
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col bg-[#F8F9FF]">
-        <Navbar />
-        <div className="flex flex-1">
-          {/* Left Sidebar */}
-          <div className="w-64 bg-gradient-to-b from-blue-50 to-[#E9EDFF] shadow-lg h-screen sticky top-0 overflow-y-auto rounded-r-3xl">
-            <div className="py-6 px-4">
-              <ul>
-                {categories.map((cat) => (
-                  <li
-                    key={cat}
-                    className={`mb-2 px-4 py-2 rounded-full cursor-pointer transition-all duration-200 select-none
-                      ${selectedCategory === cat
-                        ? 'bg-[#1A5CFF] text-white shadow font-semibold scale-105'
-                        : 'text-gray-700 hover:bg-blue-100 hover:scale-105'}
-                    `}
-                    onClick={() => setSelectedCategory(cat)}
-                  >
-                    {cat}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="flex-1 p-6">
-            {/* Search and Cart Section (skeleton) */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="relative flex-1 max-w-2xl">
-                <div className="w-full h-10 bg-gray-200 rounded-lg animate-pulse" />
-              </div>
-              <div className="flex items-center ml-4 bg-white rounded-lg shadow-sm px-4 py-2">
-                <div className="relative">
-                  <div className="h-6 w-6 bg-gray-200 rounded-full animate-pulse" />
-                </div>
-                <div className="ml-3">
-                  <div className="h-4 w-16 bg-gray-200 rounded animate-pulse mb-1" />
-                  <div className="h-4 w-20 bg-gray-200 rounded animate-pulse" />
-                </div>
-              </div>
-            </div>
-
-            {/* Filter Section (skeleton) */}
-            <div className="bg-[#E9EDFF] rounded-lg shadow-sm px-8 py-4 mb-6">
-              <div className="flex justify-between items-center max-w-4xl">
-                <div className="flex items-center gap-16">
-                  <div className="h-6 w-24 bg-gray-200 rounded animate-pulse" />
-                  <div className="h-6 w-24 bg-gray-200 rounded animate-pulse" />
-                </div>
-              </div>
-            </div>
-
-            {/* Skeleton Products Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {Array.from({ length: 8 }).map((_, idx) => (
-                <div key={idx} className="bg-white rounded-lg shadow-sm overflow-hidden relative">
-                  <div className="p-4 flex flex-col h-full">
-                    <div className="flex justify-center mb-4">
-                      <div className="relative w-40 h-40 bg-gray-200 rounded-lg animate-pulse" />
-                    </div>
-                    <div className="h-6 w-32 bg-gray-200 rounded mb-2 animate-pulse mx-auto" />
-                    <div className="h-5 w-20 bg-gray-200 rounded mb-2 animate-pulse mx-auto" />
-                    <div className="h-4 w-16 bg-gray-200 rounded mb-4 animate-pulse mx-auto" />
-                    <div className="w-full mt-4 py-2 px-4 rounded-lg bg-gray-200 animate-pulse h-10" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <Loader />;
   }
 
   if (error) {
@@ -412,139 +352,143 @@ export default function ProductPage() {
                 placeholder="Search products..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 pl-10 pr-4 rounded-lg border border-gray-300 focus:outline-none focus:border-blue-500"
+                className="w-full px-8 py-4 rounded-2xl border border-blue-100 bg-white text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 placeholder-gray-400 text-lg"
               />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  className="h-5 w-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
             </div>
 
-            <div className="flex items-center">
+            <div className="flex items-center gap-4 ml-6">
               {/* Upload Prescription Button */}
-              <div
-                className="ml-4 cursor-pointer rounded-2xl bg-gradient-to-tr from-green-50 to-white shadow-lg hover:shadow-xl border border-green-200 px-6 py-4 flex items-center gap-4 transition-all duration-300 hover:scale-105"
+              <button
                 onClick={handleGeneralUploadClick}
+                className="flex flex-col items-center justify-center px-8 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold shadow-lg hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 focus:outline-none"
               >
-                <div className="relative flex items-center justify-center">
-                  <div className="bg-white rounded-full p-3 flex items-center justify-center shadow-md">
-                    <svg
-                      className="w-7 h-7 text-green-600 drop-shadow-sm"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                      />
-                    </svg>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <span className="text-lg font-semibold">Upload</span>
                 </div>
-                <div className="flex flex-col items-start justify-center ml-1">
-                  <span className="font-bold text-lg text-green-800 tracking-tight">Upload</span>
-                  <span className="uppercase text-xs font-semibold tracking-wider text-green-600">Prescription</span>
-                </div>
-              </div>
+                <span className="text-xs font-semibold uppercase tracking-wider text-white/80 mt-1">Prescription</span>
+              </button>
 
-              {/* Cart Section */}
-              <div
-                className="ml-4 cursor-pointer rounded-2xl bg-gradient-to-tr from-white via-blue-50 to-white shadow-xl px-6 py-4 flex items-center gap-4 transition-transform hover:scale-105 border border-blue-100 min-w-[170px]"
+              {/* Cart Button */}
+              <button
                 onClick={() => setIsCartOpen(true)}
+                className="flex flex-col items-center justify-center px-8 py-3 min-w-[176px] rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold shadow-lg hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 focus:outline-none relative"
               >
-                <div className="relative flex items-center justify-center">
-                  <div className="bg-[#1A5CFF] rounded-full p-2 flex items-center justify-center shadow-md">
-                    <svg
-                      className="h-7 w-7 text-white drop-shadow"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                      />
-                    </svg>
-                    <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white shadow">
-                      {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
-                    </span>
-                  </div>
+                {/* Item count pill at top right */}
+                <span className="absolute -top-2 right-0 bg-white text-red-600 text-xs font-bold rounded-full px-4 py-1 shadow uppercase tracking-wide">
+                  {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+                </span>
+                <div className="flex items-center gap-2">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                  <span className="text-lg font-semibold">Cart</span>
                 </div>
-                <div className="flex flex-col items-start justify-center ml-2">
-                  <span className="uppercase text-xs font-semibold tracking-wider text-gray-500 mb-1">Cart</span>
-                  <span className="text-lg font-bold text-gray-800 tracking-tight">LKR {cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)}</span>
-                </div>
-              </div>
+                <span className="text-xs font-bold uppercase tracking-wider text-white/90 mt-1">LKR {cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)}</span>
+              </button>
             </div>
           </div>
 
           {/* Filter Section */}
-          <div className="bg-[#E9EDFF] rounded-lg shadow-sm px-8 py-4 mb-6">
-            <div className="flex justify-between items-center max-w-4xl">
-              <div className="flex items-center gap-16">
-                {/* Filters Icon */}
-                <div className="flex items-center gap-2 text-gray-700">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span className="font-medium">Filters</span>
-                </div>
+          <div className="bg-white rounded-2xl shadow px-6 py-4 mb-8 flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-4">
+              {/* Filters Icon */}
+              <div className="flex items-center gap-2 text-gray-700 font-semibold">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span>Filters</span>
+              </div>
 
-                {/* Price Filter */}
-                <div className="relative">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsPriceDropdownOpen((prev) => !prev);
-                    }}
-                    className="flex items-center space-x-2 text-gray-700 hover:text-gray-900"
+              {/* Prices Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsPriceDropdownOpen((prev) => {
+                      if (!prev) setIsPrescriptionDropdownOpen(false);
+                      return !prev;
+                    });
+                  }}
+                  className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                >
+                  <span>Prices</span>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${isPriceDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <span>Prices</span>
-                    <svg
-                      className={`w-5 h-5 transition-transform ${isPriceDropdownOpen ? 'transform rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {isPriceDropdownOpen && (
+                  <div
+                    ref={filterRef}
+                    className="absolute z-10 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 border border-gray-100"
+                  >
+                    {priceOptions.map((option) => (
+                      <button
+                        key={option.id}
+                        onClick={() => handlePriceChange(option.label)}
+                        className={`block w-full text-left px-4 py-2 text-sm font-medium ${
+                          selectedPrice === option.label
+                            ? 'text-blue-600'
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Prescription Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    setIsPrescriptionDropdownOpen((prev) => {
+                      if (!prev) setIsPriceDropdownOpen(false);
+                      return !prev;
+                    });
+                  }}
+                  className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                >
+                  <span>Prescription</span>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${isPrescriptionDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {isPrescriptionDropdownOpen && (
+                  <div className="absolute z-10 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 border border-gray-100">
+                    <button
+                      className={`block w-full text-left px-4 py-2 text-sm font-medium ${selectedPrescription === '' ? 'text-blue-600' : 'text-gray-700 hover:bg-gray-100'}`}
+                      onClick={() => { setSelectedPrescription(''); setIsPrescriptionDropdownOpen(false); }}
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {isPriceDropdownOpen && (
-                    <div
-                      ref={filterRef}
-                      className="absolute z-10 mt-2 w-48 bg-white rounded-lg shadow-lg py-2"
+                      All Products
+                    </button>
+                    <button
+                      className={`block w-full text-left px-4 py-2 text-sm font-medium ${selectedPrescription === 'Prescription Required' ? 'text-blue-600' : 'text-gray-700 hover:bg-gray-100'}`}
+                      onClick={() => { setSelectedPrescription('Prescription Required'); setIsPrescriptionDropdownOpen(false); }}
                     >
-                      {priceOptions.map((option) => (
-                        <button
-                          key={option.id}
-                          onClick={() => handlePriceChange(option.label)}
-                          className={`block w-full text-left px-4 py-2 text-sm ${
-                            selectedPrice === option.label
-                              ? 'bg-blue-50 text-blue-600'
-                              : 'text-gray-700 hover:bg-gray-100'
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                      Prescription Required
+                    </button>
+                    <button
+                      className={`block w-full text-left px-4 py-2 text-sm font-medium ${selectedPrescription === 'No Prescription Needed' ? 'text-blue-600' : 'text-gray-700 hover:bg-gray-100'}`}
+                      onClick={() => { setSelectedPrescription('No Prescription Needed'); setIsPrescriptionDropdownOpen(false); }}
+                    >
+                      No Prescription Needed
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -568,11 +512,6 @@ export default function ProductPage() {
                   <div className="p-4 flex flex-col h-full">
                     <div className="flex justify-center mb-4">
                       <div className="relative h-48 w-full overflow-hidden rounded-t-lg bg-gray-200">
-                        {/* {product.stock === 0 && (
-                          <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-full z-10">
-                            Out of Stock
-                          </div>
-                        )} */}
                         <Image
                           src={getProductImage(product)}
                           alt={product.name}
@@ -583,17 +522,25 @@ export default function ProductPage() {
                         />
                       </div>
                     </div>
-                    <h3 className="text-base font-semibold text-gray-800 truncate" title={product.name}>{product.name}</h3>
+                    <h3 className="text-base font-semibold text-gray-800 whitespace-normal break-words min-h-[48px]" title={product.name}>{product.name}</h3>
                     {product.packPrice ? (
-                      <p className="text-blue-600 font-bold text-xl mt-2">
-                        LKR {product.packPrice.toFixed(2)}
-                      </p>
+                      <span className="text-xl font-bold text-blue-600 text-left mt-6 block">LKR {product.packPrice.toFixed(2)}</span>
                     ) : (
-                      <p className="text-blue-600 font-bold text-xl mt-2">
-                        LKR {product.price.toFixed(2)}
-                      </p>
+                      <span className="text-xl font-bold text-blue-600 text-left mt-6 block">LKR {product.price.toFixed(2)}</span>
                     )}
-                    <p className="text-sm text-gray-500 mt-1">Stock: {product.stock > 0 ? product.stock : 'Out of Stock'}</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {product.stock > 0 ? (
+                        <span className="flex items-center gap-2 text-[15px] text-green-600">
+                          <span className="inline-block w-1.75 h-1.75 rounded-full bg-green-500"></span>
+                          {product.stock} in stock
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2 text-[15px] text-red-500">
+                          <span className="inline-block w-1.75 h-1.75 rounded-full bg-red-500"></span>
+                          Out of stock
+                        </span>
+                      )}
+                    </p>
                     
                     <div className="mt-auto pt-4">
                       {cartItem ? (
@@ -665,6 +612,12 @@ export default function ProductPage() {
                       )}
                     </div>
                   </div>
+                  {/* Rx Required badge */}
+                  {product.prescription === 'required' && (
+                    <div className="absolute top-1 right-1 z-10">
+                      <span className="bg-orange-500 text-white font-bold rounded-full px-1 py-1 text-sm shadow animate-pulse">Rx Required</span>
+                    </div>
+                  )}
                 </div>
               );
             })}

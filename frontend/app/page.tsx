@@ -9,11 +9,12 @@ import CommitmentSection from "@/components/CommitmentSection"
 import TestimonialSection from "@/components/TestimonialSection"
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import ChatWidget from '@/components/ChatWidget';
 
 
 export default function Home() {
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-purple-50">
+    <div className="min-h-screen">
       <Navbar />
       <HeroSection />
       <FeaturesSection />
@@ -24,6 +25,7 @@ export default function Home() {
       {/*<ServicesSection />
       <TeamSection />*/}
       <TestimonialSection />
+      <ChatWidget />
       <Footer />
     </div>
   )

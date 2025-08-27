@@ -88,6 +88,7 @@ export default function PrescriptionsPage() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -345,8 +346,10 @@ export default function PrescriptionsPage() {
 
   const handleProceedToOrder = async () => {
     try {
+      setIsPlacingOrder(true);
       if (!selectedPrescription || selectedProducts.length === 0) {
         showToast('Please select products to order', 'error');
+        setIsPlacingOrder(false);
         return;
       }
 
@@ -354,6 +357,7 @@ export default function PrescriptionsPage() {
       const authTest = await testAuthentication();
       if (!authTest) {
         showToast('Authentication failed. Please login again.', 'error');
+        setIsPlacingOrder(false);
         return;
       }
 
@@ -366,6 +370,7 @@ export default function PrescriptionsPage() {
       const token = sessionStorage.getItem('token') || sessionStorage.getItem('staffToken');
       if (!token) {
         showToast('Please login to create order', 'error');
+        setIsPlacingOrder(false);
         return;
       }
 
@@ -396,8 +401,10 @@ export default function PrescriptionsPage() {
         setSelectedProducts([]);
         // Optionally refresh the prescriptions list
         fetchPrescriptions();
+        setIsPlacingOrder(false);
       } else {
         showToast(response.data.message || 'Failed to create order', 'error');
+        setIsPlacingOrder(false);
       }
     } catch (error: any) {
       console.log('Error creating order:', error);
@@ -424,6 +431,7 @@ export default function PrescriptionsPage() {
       } else {
         showToast(error.response?.data?.message || 'Failed to create order', 'error');
       }
+      setIsPlacingOrder(false);
     }
   };
 
@@ -985,26 +993,32 @@ export default function PrescriptionsPage() {
                       </div>
 
                       {/* Products List */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 py-4 px-2 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 350px)' }}>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 py-4 px-2">
                         {filteredInventory.map((product) => (
                           <div
                             key={product._id}
-                            className={`relative flex flex-col items-center justify-between p-4 bg-white border rounded-xl shadow-sm transition-all duration-300 hover:shadow-lg hover:scale-105 ${
+                            className={`relative flex flex-col items-center justify-between p-4 bg-white border border-gray-200 rounded-2xl shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
                               product.stock === 0 ? 'opacity-60 bg-gray-100' : ''
                             }`}
                           >
-                            <div className="relative w-full h-40 mb-4">
-                              <Image
-                                src={getProductImage(product)}
-                                alt={product.name}
-                                fill
-                                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-                                className={`object-cover rounded-lg ${
-                                  product.stock === 0 ? 'grayscale' : ''
-                                }`}
-                              />
+                            <div className="relative w-full aspect-[4/5] mb-4 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden">
+                              {getProductImage(product) ? (
+                                <Image
+                                  src={getProductImage(product)}
+                                  alt={product.name}
+                                  fill
+                                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                                  className={`object-contain rounded-lg ${product.stock === 0 ? 'grayscale' : ''}`}
+                                />
+                              ) : (
+                                <div className="flex items-center justify-center w-full h-full text-gray-300">
+                                  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a4 4 0 004 4h10a4 4 0 004-4V7a4 4 0 00-4-4H7a4 4 0 00-4 4z" />
+                                  </svg>
+                                </div>
+                              )}
                             </div>
-                            <div className="text-center">
+                            <div className="text-center w-full">
                               <h4 className="font-semibold text-gray-800 text-sm truncate w-full" title={product.name}>
                                 {product.name}
                               </h4>
@@ -1014,8 +1028,12 @@ export default function PrescriptionsPage() {
                               {product.stock > 0 ? (
                                 <button
                                   onClick={() => handleQuantityChange(product, 1)}
-                                  className="w-full px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                  aria-label={`Add ${product.name} to order`}
                                 >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                                  </svg>
                                   Quick Add
                                 </button>
                               ) : (
@@ -1041,7 +1059,7 @@ export default function PrescriptionsPage() {
                           </div>
                         ) : (
                           <>
-                            <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+                            <div className="space-y-3 pr-2">
                               {selectedProducts.map(({ item, quantity }) => (
                                 <div key={item._id} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
                                   <div className="flex items-center gap-3 flex-1">
@@ -1102,10 +1120,20 @@ export default function PrescriptionsPage() {
                         </button>
                         <button
                           onClick={handleProceedToOrder}
-                          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                          disabled={selectedProducts.length === 0}
+                          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center justify-center gap-2"
+                          disabled={selectedProducts.length === 0 || isPlacingOrder}
                         >
-                          Proceed to Order
+                          {isPlacingOrder ? (
+                            <>
+                              <svg className="animate-spin h-5 w-5 mr-2 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Placing Order...
+                            </>
+                          ) : (
+                            'Proceed to Order'
+                          )}
                         </button>
                       </div>
                     </div>

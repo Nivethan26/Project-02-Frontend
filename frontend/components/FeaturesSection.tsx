@@ -5,7 +5,7 @@ export default function FeaturesSection() {
     {
       icon: <Truck className="w-6 h-6 text-blue-600" />,
       title: "Free Shipping",
-      text: "Order Over Rs. 1000",
+      text: "Order Over Rs. 15000",
     },
     {
       icon: <CreditCard className="w-6 h-6 text-blue-600" />,
@@ -25,8 +25,8 @@ export default function FeaturesSection() {
   ]
 
   return (
-    <section className="bg-white py-10">
-      <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <section className="bg-white py-8 sm:py-10 px-2 sm:px-4">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         {features.map((f, i) => (
           <div
             key={i}

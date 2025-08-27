@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable prefer-const */
 "use client";
 import Sidebar from '@/components/layout/Sidebar';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -32,13 +34,23 @@ export default function CustomerOrderPage() {
       let customerId = userInfo._id || userInfo.id;
       let email = userInfo.email;
       let phone = userInfo.phone;
+      let userType = userInfo.type || userInfo.userType || userInfo.role;
+
+      // Prevent fetch if type is prescription and no customerId
+      if ((userType === 'prescription' || userInfo.orderType === 'prescription') && !customerId) {
+        setError('No customer ID found for prescription type.');
+        setOrders([]);
+        return;
+      }
 
       console.log('Customer identifiers:', { customerId, email, phone });
 
       // Fetch orders for the logged-in customer
       const customerOrders = await getCustomerOrders(customerId, email, phone);
-      console.log('Fetched orders:', customerOrders);
-      setOrders(customerOrders);
+      // Filter out orders with empty items or totalAmount 0
+      const filteredOrders = (customerOrders || []).filter(order => Array.isArray(order.items) && order.items.length > 0 && (order.totalAmount || order.total || 0) > 0);
+      console.log('Fetched orders:', filteredOrders);
+      setOrders(filteredOrders);
       
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -105,6 +117,12 @@ export default function CustomerOrderPage() {
     );
   }
 
+  console.log('selectedOrder:', selectedOrder);
+  // Calculate subtotal, shipping, and tax for selectedOrder
+  const subtotal = selectedOrder?.subtotal ?? selectedOrder?.items.reduce((sum, item) => sum + item.price * item.quantity, 0) ?? 0;
+  const shipping = selectedOrder?.shipping ?? 500;
+  const tax = selectedOrder?.tax ?? 0;
+  const total = subtotal + shipping + tax;
   return (
     <ProtectedRoute role="customer">
       <div className="flex min-h-screen bg-gray-50">
@@ -160,43 +178,49 @@ export default function CustomerOrderPage() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {orders.map((order) => (
-                        <div
-                          key={order.id}
-                          onClick={() => setSelectedOrder(order)}
-                          className={`p-6 border rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md ${
-                            selectedOrder?.id === order.id
-                              ? 'border-blue-500 bg-blue-50'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-4">
-                            <div>
-                              <h3 className="font-semibold text-gray-900">{order.orderNumber}</h3>
-                              <p className="text-sm text-gray-500">{formatDate(order.date || order.createdAt || '')}</p>
+                      {orders.map((order) => {
+                        const subtotal = order.subtotal ?? order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+                        const shipping = order.shipping ?? 500;
+                        const tax = order.tax ?? 0;
+                        const total = subtotal + shipping + tax;
+                        return (
+                          <div
+                            key={order.id}
+                            onClick={() => setSelectedOrder(order)}
+                            className={`p-6 border rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md ${
+                              selectedOrder?.id === order.id
+                                ? 'border-blue-500 bg-blue-50'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-4">
+                              <div>
+                                <h3 className="font-semibold text-gray-900">{order.orderNumber}</h3>
+                                <p className="text-sm text-gray-500">{formatDate(order.date || order.createdAt || '')}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-bold text-gray-900">LKR {total.toFixed(2)}</p>
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                                  {getStatusIcon(order.status)} {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                </span>
+                              </div>
                             </div>
-                            <div className="text-right">
-                              <p className="font-bold text-gray-900">LKR {(order.totalAmount || order.total || 0).toFixed(2)}</p>
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                                {getStatusIcon(order.status)} {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                              </span>
+                            
+                            <div className="flex items-center gap-2 mb-3">
+                              <span className="text-sm text-gray-600">{order.items.length} {order.items.length === 1 ? 'item' : 'items'}</span>
+                              <span className="text-gray-300">•</span>
+                              <span className="text-sm text-gray-600">{order.paymentMethod}</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              </svg>
+                              <span>{order.shippingAddress}</span>
                             </div>
                           </div>
-                          
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className="text-sm text-gray-600">{order.items.length} {order.items.length === 1 ? 'item' : 'items'}</span>
-                            <span className="text-gray-300">•</span>
-                            <span className="text-sm text-gray-600">{order.paymentMethod}</span>
-                          </div>
-                          
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            </svg>
-                            <span>{order.shippingAddress}</span>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -222,16 +246,39 @@ export default function CustomerOrderPage() {
                             {getStatusIcon(selectedOrder.status)} {selectedOrder.status.charAt(0).toUpperCase() + selectedOrder.status.slice(1)}
                           </span>
                         </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">Order Type:</span>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedOrder.orderType || '')}`}>
+                            {getStatusIcon(selectedOrder.orderType || '')} 
+                            {selectedOrder.orderType
+                              ? selectedOrder.orderType.charAt(0).toUpperCase() + selectedOrder.orderType.slice(1)
+                              : 'N/A'}
+                          </span>
+                        </div>
                         
                         <div className="flex items-center justify-between">
                           <span className="text-gray-600">Total:</span>
-                          <span className="font-bold text-gray-900">LKR {(selectedOrder.totalAmount || selectedOrder.total || 0).toFixed(2)}</span>
+                          <span className="font-bold text-gray-900">LKR {total.toFixed(2)}</span>
                         </div>
                         
                         <div className="flex items-center justify-between">
                           <span className="text-gray-600">Payment:</span>
                           <span className="text-gray-900">{selectedOrder.paymentMethod}</span>
                         </div>
+                        
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-600">Shipping:</span>
+                            <span className="font-semibold text-gray-900">LKR {shipping.toFixed(2)}</span>
+                          </div>
+
+                        {tax > 0 && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-600">Tax:</span>
+                            <span className="font-semibold text-gray-900">LKR {tax.toFixed(2)}</span>
+                          </div>
+                        )}
+
                         
                         {selectedOrder.estimatedDelivery && (
                           <div className="flex items-center justify-between">
@@ -270,7 +317,9 @@ export default function CustomerOrderPage() {
                               </div>
                               <span className="font-semibold text-gray-900">LKR {(item.price * item.quantity).toFixed(2)}</span>
                             </div>
+                            
                           ))}
+
                         </div>
                       </div>
 

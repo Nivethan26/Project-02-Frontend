@@ -10,6 +10,7 @@ import { ProductInfo } from './ProductInfo';
 import RelatedProductCard from './RelatedProductCard';
 import { useCart } from '@/context/CartContext';
 import CartSidebar from '@/components/CartSidebar';
+import Loader from '@/components/Loader';
 
 interface Product {
     _id: string;
@@ -36,17 +37,17 @@ interface SupportItem {
 const SupportInfoBox = () => {
   const supportItems: SupportItem[] = [
     {
-      icon: <FaMoneyBillAlt className="w-6 h-6 text-teal-600" />,
+      icon: <FaMoneyBillAlt className="w-6 h-6 text-[#1A5CFF]" />,
       title: "Reliable",
       text: "All products are from verified suppliers",
     },
     {
-      icon: <FaLifeRing className="w-6 h-6 text-teal-600" />,
+      icon: <FaLifeRing className="w-6 h-6 text-[#1A5CFF]" />,
       title: "Dedicated support",
       text: "Hotline: (+94212322600)",
     },
     {
-      icon: <FaCreditCard className="w-6 h-6 text-teal-600" />,
+      icon: <FaCreditCard className="w-6 h-6 text-[#1A5CFF]" />,
       title: "Payment Options",
       text: "Safe online payment options",
     },
@@ -146,7 +147,7 @@ export default function ProductDetailPage() {
     }, [id]);
 
     if (loading) {
-        return <div>Loading...</div>; // Or a proper loading skeleton
+        return <Loader />;
     }
 
     if (!product) {
@@ -213,7 +214,7 @@ export default function ProductDetailPage() {
                 <div className="mt-10">
                     <div className="bg-gray-100 p-6 rounded-lg">
                         <div>
-                            <h3 className="text-teal-700 font-bold mb-2">DESCRIPTION</h3>
+                            <h3 className="text-[#1A5CFF] font-bold mb-2">DESCRIPTION</h3>
                             <div
                                 dangerouslySetInnerHTML={{ __html: product.description.replace(/\n/g, '<br />') }}
                             />
@@ -222,7 +223,7 @@ export default function ProductDetailPage() {
                 </div>
     
                 <div className="mt-12">
-                    <h2 className="text-xl font-bold text-teal-700 mb-6">RELATED PRODUCTS</h2>
+                    <h2 className="text-xl font-bold text-[#1A5CFF] mb-6">RELATED PRODUCTS</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                         {relatedProducts.map((prod) => (
                             <RelatedProductCard key={prod._id} product={prod} />

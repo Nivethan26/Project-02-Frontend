@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useRouter } from "next/navigation";
 import { useCart } from '@/context/CartContext';
@@ -5,6 +7,8 @@ import { useEffect, useState } from 'react';
 import { createOnlineOrder, CreateOrderData } from '@/services/orders';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
+import Loader from '@/components/Loader';
+import type { CartItem } from '@/context/CartContext';
 
 interface CustomerInfo {
   name: string;
@@ -12,7 +16,7 @@ interface CustomerInfo {
   phone: string;
   billingAddress: string;
   city: string;
-  postalCode: string;
+  postalCode?: string;
 }
 
 interface CardInfo {
@@ -94,9 +98,9 @@ const cardTypes = {
 };
 
 export default function PaymentPage() {
-  const { cartItems, clearCart, isLoggedIn, hasHydrated } = useCart();
+  const { cartItems, clearCart, hasHydrated } = useCart();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     name: '',
@@ -118,59 +122,24 @@ export default function PaymentPage() {
   // Calculate totals
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = 500; // Fixed shipping cost
-  const tax = subtotal * 0.15; // 15% tax
-  const total = subtotal + shipping + tax;
+  const total = subtotal + shipping;
 
   // Get current card type
   const currentCardType = getCardType(cardInfo.cardNumber);
   const cardConfig = cardTypes[currentCardType as keyof typeof cardTypes];
 
   // Function to get the correct image URL
-  const getProductImage = (product: any) => {
-    // Handle cart items that only have image property
-    if (product.image && !product.images) {
+  const getProductImage = (product: CartItem) => {
       const imagePath = product.image;
       if (!imagePath) {
         return '/images/package.png';
       }
-      // If it's already a full URL, return it
       if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
         return imagePath;
-      }
-      // If it's a relative path, construct the full URL
-      const filename = imagePath.replace(/\\/g, '/').split('/').pop();
-      const fullUrl = `http://localhost:8000/uploads/products/${filename}`;
-      return fullUrl;
-    }
-    
-    // Handle product objects with images array
-    const imagePath = product.images && product.images.length > 0 ? product.images[0] : product.image;
-    if (!imagePath) {
-      return '/images/package.png';
     }
     const filename = imagePath.replace(/\\/g, '/').split('/').pop();
     const fullUrl = `http://localhost:8000/uploads/products/${filename}`;
     return fullUrl;
-  };
-
-  // Function to validate and get safe image URL (fallback)
-  const getSafeImageUrl = (imageUrl: string | null | undefined): string => {
-    if (!imageUrl || imageUrl.trim() === '') {
-      return '/images/package.png';
-    }
-    try {
-      if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-        new URL(imageUrl);
-        return imageUrl;
-      }
-      if (imageUrl.startsWith('/')) {
-        return imageUrl;
-      }
-      return `/${imageUrl}`;
-    } catch (error) {
-      console.warn('Invalid image URL:', imageUrl);
-      return '/images/package.png';
-    }
   };
 
   // Format card number with spaces
@@ -198,20 +167,9 @@ export default function PaymentPage() {
     return v;
   };
 
-  // Validate form
+  // Validate form (only card info now)
   const validateForm = (): boolean => {
-    const newErrors: Partial<CustomerInfo & CardInfo> = {};
-    
-    // Customer info validation
-    if (!customerInfo.name.trim()) newErrors.name = 'Name is required';
-    if (!customerInfo.email.trim()) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(customerInfo.email)) newErrors.email = 'Email is invalid';
-    if (!customerInfo.phone.trim()) newErrors.phone = 'Phone number is required';
-    if (!customerInfo.billingAddress.trim()) newErrors.billingAddress = 'Billing address is required';
-    if (!customerInfo.city.trim()) newErrors.city = 'City is required';
-    if (!customerInfo.postalCode.trim()) newErrors.postalCode = 'Postal code is required';
-    
-    // Card info validation
+    const newErrors: Partial<CardInfo> = {};
     if (!cardInfo.cardNumber.replace(/\s/g, '').trim()) newErrors.cardNumber = 'Card number is required';
     else if (cardInfo.cardNumber.replace(/\s/g, '').length < 16) newErrors.cardNumber = 'Card number must be 16 digits';
     if (!cardInfo.expiryDate.trim()) newErrors.expiryDate = 'Expiry date is required';
@@ -219,7 +177,6 @@ export default function PaymentPage() {
     if (!cardInfo.cvv.trim()) newErrors.cvv = 'CVV is required';
     else if (cardInfo.cvv.length < 3) newErrors.cvv = 'CVV must be 3-4 digits';
     if (!cardInfo.cardholderName.trim()) newErrors.cardholderName = 'Cardholder name is required';
-    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -227,11 +184,6 @@ export default function PaymentPage() {
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('=== PAYMENT FORM SUBMISSION START ===');
-    console.log('Cart items before submission:', cartItems);
-    console.log('Customer info:', customerInfo);
-    console.log('Card info:', cardInfo);
-    
     if (!validateForm()) {
       toast.error('Please fix the errors in the form');
       return;
@@ -245,6 +197,7 @@ export default function PaymentPage() {
       const token = sessionStorage.getItem("token");
       const userInfo = token ? JSON.parse(sessionStorage.getItem("userInfo") || sessionStorage.getItem("user") || '{}') : null;
       const customerId = userInfo?._id || userInfo?.id;
+      // Use fetched customerInfo for order
       const orderData: CreateOrderData = {
         customer: {
           name: customerInfo.name,
@@ -252,7 +205,7 @@ export default function PaymentPage() {
           phone: customerInfo.phone,
           billingAddress: customerInfo.billingAddress,
           city: customerInfo.city,
-          postalCode: customerInfo.postalCode
+          postalCode: customerInfo.postalCode || ''
         },
         items: cartItems.map(item => ({
           id: item.id,
@@ -264,23 +217,48 @@ export default function PaymentPage() {
         paymentMethod: paymentMethod,
         subtotal: subtotal,
         shipping: shipping,
-        tax: tax,
+        tax: 0, // No tax
         total: total,
         customerId: customerId
       };
-      console.log('Order data being sent:', orderData);
-      
       const order = await createOnlineOrder(orderData);
-      console.log('Order created successfully:', order);
-      
+      // --- Save payment in backend payment database ---
+      let orderId = (order as any)._id || (order as any).id || (order as any).orderId || (order as any).order?._id;
+      if (!orderId) {
+        function findId(obj: any): string | undefined {
+          if (!obj || typeof obj !== 'object') return undefined;
+          if (obj._id) return obj._id;
+          for (const key of Object.keys(obj)) {
+            const found = findId(obj[key]);
+            if (found) return found;
+          }
+          return undefined;
+        }
+        orderId = findId(order);
+      }
+      if (orderId) {
+        try {
+          await fetch('http://localhost:8000/api/payments', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${sessionStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+              orderId: orderId,
+              paymentMethod: paymentMethod,
+              amount: total,
+              paymentType: 'online'
+            })
+          });
+          toast.success('Payment recorded in database!');
+        } catch (err) {
+          toast.error('Failed to record payment in database');
+        }
+      }
       toast.success('Order placed successfully! You will receive a confirmation email shortly.');
-      setOrderPlaced(true); // Set flag to prevent redirect
-      console.log('Order placed flag set to true');
-      
+      setOrderPlaced(true);
       clearCart();
-      console.log('Cart cleared');
-      
-      // Store order data for confirmation page
       const confirmationData = {
         orderNumber: order.orderNumber || `ORD-${Date.now()}`,
         orderId: order._id || order.id,
@@ -288,21 +266,11 @@ export default function PaymentPage() {
         items: cartItems,
         customer: customerInfo,
         paymentMethod: paymentMethod,
-        estimatedDelivery: '' // Will be calculated on confirmation page
+        estimatedDelivery: ''
       };
       sessionStorage.setItem('orderConfirmationData', JSON.stringify(confirmationData));
-      console.log('Order data stored in session storage');
-      
-      // Verify the data was stored correctly
-      const storedData = sessionStorage.getItem('orderConfirmationData');
-      console.log('Verification - stored data:', storedData);
-      
-      // Redirect to confirmation page
-      console.log('Redirecting to confirmation page...');
       router.push('/products/viewcart/confirmation');
     } catch (error) {
-      console.error('=== PAYMENT FORM SUBMISSION ERROR ===');
-      console.error('Error creating order:', error);
       toast.error('Failed to place order. Please try again.');
     } finally {
       setLoading(false);
@@ -310,16 +278,39 @@ export default function PaymentPage() {
   };
 
   useEffect(() => {
-    console.log('=== PAYMENT PAGE USE EFFECT ===');
-    console.log('hasHydrated:', hasHydrated);
-    console.log('cartItems.length:', cartItems.length);
-    console.log('orderPlaced:', orderPlaced);
-    
     if (hasHydrated && cartItems.length === 0 && !orderPlaced) {
-      console.log('Redirecting to products page - cart is empty and order not placed');
       router.push('/products');
     }
+    // Fetch user details from backend (use /api/auth/profile)
+    const fetchUserDetails = async () => {
+      try {
+        const token = sessionStorage.getItem('token');
+        if (!token) return;
+        const res = await fetch('http://localhost:8000/api/auth/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        setCustomerInfo({
+          name: (data.firstName ? data.firstName + ' ' : '') + (data.lastName || ''),
+          email: data.email || '',
+          phone: data.phone || '',
+          billingAddress: data.address || '',
+          city: data.city || '',
+          postalCode: data.postalCode || ''
+        });
+      } catch (err) {
+        // fallback: do nothing
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUserDetails();
   }, [hasHydrated, cartItems.length, router, orderPlaced]);
+
+  if (loading) {
+    return <Loader />;
+  }
 
   if (!hasHydrated) return null;
   if (cartItems.length === 0) {
@@ -345,7 +336,7 @@ export default function PaymentPage() {
         <h1 className="text-5xl font-extrabold text-center text-blue-700 mb-2 tracking-tight drop-shadow">Checkout</h1>
         <p className="text-center text-slate-500 mb-10 text-lg">Complete your purchase</p>
         <div className="flex flex-col lg:flex-row gap-10 items-start justify-center">
-          {/* Left: Customer Information Form */}
+          {/* Left: Customer Information (Read-only) */}
           <div className="flex-1 w-full max-w-2xl">
             <div className="bg-white/90 rounded-3xl shadow-2xl p-10 mb-6 border border-blue-100 animate-fade-in">
               <div className="flex items-center gap-3 mb-8">
@@ -359,70 +350,54 @@ export default function PaymentPage() {
               <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Full Name *</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Full Name</label>
                     <input
                       type="text"
                       value={customerInfo.name}
-                      onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})}
-                      className={`w-full px-5 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors text-lg bg-slate-50 ${errors.name ? 'border-red-400' : 'border-slate-200'}`}
-                      placeholder="Enter your full name"
+                      readOnly
+                      className="w-full px-5 py-3 border-2 rounded-xl bg-slate-100 text-lg border-slate-200 cursor-not-allowed"
+                      placeholder="Full name"
                     />
-                    {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Email *</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Email</label>
                     <input
                       type="email"
                       value={customerInfo.email}
-                      onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})}
-                      className={`w-full px-5 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors text-lg bg-slate-50 ${errors.email ? 'border-red-400' : 'border-slate-200'}`}
-                      placeholder="Enter your email"
+                      readOnly
+                      className="w-full px-5 py-3 border-2 rounded-xl bg-slate-100 text-lg border-slate-200 cursor-not-allowed"
+                      placeholder="Email"
                     />
-                    {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Phone Number *</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Phone Number</label>
                     <input
                       type="tel"
                       value={customerInfo.phone}
-                      onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
-                      className={`w-full px-5 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors text-lg bg-slate-50 ${errors.phone ? 'border-red-400' : 'border-slate-200'}`}
-                      placeholder="Enter your phone number"
+                      readOnly
+                      className="w-full px-5 py-3 border-2 rounded-xl bg-slate-100 text-lg border-slate-200 cursor-not-allowed"
+                      placeholder="Phone number"
                     />
-                    {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">City *</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">City</label>
                     <input
                       type="text"
                       value={customerInfo.city}
-                      onChange={(e) => setCustomerInfo({...customerInfo, city: e.target.value})}
-                      className={`w-full px-5 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors text-lg bg-slate-50 ${errors.city ? 'border-red-400' : 'border-slate-200'}`}
-                      placeholder="Enter your city"
+                      readOnly
+                      className="w-full px-5 py-3 border-2 rounded-xl bg-slate-100 text-lg border-slate-200 cursor-not-allowed"
+                      placeholder="City"
                     />
-                    {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Billing Address *</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Billing Address</label>
                     <textarea
                       value={customerInfo.billingAddress}
-                      onChange={(e) => setCustomerInfo({...customerInfo, billingAddress: e.target.value})}
-                      className={`w-full px-5 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors text-lg bg-slate-50 resize-none ${errors.billingAddress ? 'border-red-400' : 'border-slate-200'}`}
-                      placeholder="Enter your complete billing address"
+                      readOnly
+                      className="w-full px-5 py-3 border-2 rounded-xl bg-slate-100 text-lg border-slate-200 cursor-not-allowed resize-none"
+                      placeholder="Billing address"
                       rows={3}
                     />
-                    {errors.billingAddress && <p className="text-red-500 text-sm mt-1">{errors.billingAddress}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Postal Code *</label>
-                    <input
-                      type="text"
-                      value={customerInfo.postalCode}
-                      onChange={(e) => setCustomerInfo({...customerInfo, postalCode: e.target.value})}
-                      className={`w-full px-5 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors text-lg bg-slate-50 ${errors.postalCode ? 'border-red-400' : 'border-slate-200'}`}
-                      placeholder="Enter postal code"
-                    />
-                    {errors.postalCode && <p className="text-red-500 text-sm mt-1">{errors.postalCode}</p>}
                   </div>
                 </div>
                 {/* Payment Method - Card Payment */}
@@ -679,10 +654,6 @@ export default function PaymentPage() {
                   <div className="flex justify-between items-center">
                     <span className="font-medium text-slate-700">Shipping</span>
                     <span className="font-semibold text-slate-800">LKR {shipping.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-slate-700">Tax (15%)</span>
-                    <span className="font-semibold text-slate-800">LKR {tax.toFixed(2)}</span>
                   </div>
                   <div className="border-t border-slate-200 pt-3 flex justify-between items-center">
                     <span className="font-bold text-lg text-slate-800">Total</span>

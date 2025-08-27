@@ -32,6 +32,12 @@ export const ProductInfo: React.FC<ProductInfoProps> = ({ product }) => {
     const pathname = usePathname();
 
     const handleActionClick = () => {
+        // Prevent adding out-of-stock products
+        if (product.stock <= 0) {
+            toast.error('This product is out of stock');
+            return;
+        }
+
         const token = sessionStorage.getItem('token');
         if (!token) {
             router.push(`/login?redirect=${pathname}`);
@@ -66,13 +72,13 @@ export const ProductInfo: React.FC<ProductInfoProps> = ({ product }) => {
     return (
         <div>
           <div className="mb-2">
-            <span className="bg-green-500 text-white px-3 py-1 rounded font-semibold text-sm">
+            <span className={`${product.stock > 0 ? 'bg-green-600' : 'bg-red-600'} text-white px-3 py-1 rounded font-semibold text-sm`}>
                 {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
             </span>
           </div>
           <h1 className="text-2xl md:text-3xl font-bold mb-2">{product.name}</h1>
           
-          <div className="text-2xl text-teal-700 font-bold mb-4">
+          <div className="text-2xl text-[#1A5CFF] font-bold mb-4">
             {product.packPrice 
                 ? `LKR ${product.packPrice.toFixed(2)}` 
                 : `LKR ${product.price.toFixed(2)}`
@@ -99,19 +105,29 @@ export const ProductInfo: React.FC<ProductInfoProps> = ({ product }) => {
                 >+</button>
               </div>
               <button 
-                  className="flex-1 bg-teal-500 hover:bg-teal-600 text-white py-2.5 rounded-md font-bold text-lg transition"
+                  className={`flex-1 py-2.5 rounded-md font-bold text-lg transition ${
+                    product.stock > 0 
+                      ? 'bg-[#1A5CFF] hover:bg-[#1547CC] text-white' 
+                      : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                  }`}
                   onClick={handleActionClick}
+                  disabled={product.stock <= 0}
               >
-                  {product.prescription === 'required' ? 'Upload Prescription' : 'Add to cart'}
+                  {product.stock <= 0 
+                    ? 'Out of Stock' 
+                    : product.prescription === 'required' 
+                      ? 'Upload Prescription' 
+                      : 'Add to cart'
+                  }
               </button>
           </div>
           
           <div className="border-t pt-6">
               <h3 className="text-md font-semibold text-gray-800 mb-3">Product Details</h3>
               <div className="space-y-3 text-gray-700">
-                  {product.brand && <div className="flex items-center"><span className="font-semibold w-24">Brand:</span> <span className="text-teal-600 cursor-pointer">{product.brand}</span></div>}
+                  {product.brand && <div className="flex items-center"><span className="font-semibold w-24">Brand:</span> <span className="text-[#1A5CFF] cursor-pointer">{product.brand}</span></div>}
                   {product.packSize && <div className="flex items-center"><span className="font-semibold w-24">Pack Size:</span> {product.packSize}</div>}
-                  {product.category && <div className="flex items-center"><span className="font-semibold w-24">Category:</span> <span className="text-teal-600 cursor-pointer capitalize">{product.category.replace(/_/g, ' ')}</span></div>}
+                  {product.category && <div className="flex items-center"><span className="font-semibold w-24">Category:</span> <span className="text-[#1A5CFF] cursor-pointer capitalize">{product.category.replace(/_/g, ' ')}</span></div>}
               </div>
           </div>
 

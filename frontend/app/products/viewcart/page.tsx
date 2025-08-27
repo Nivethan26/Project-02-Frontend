@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from '@/context/CartContext';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import Loader from '@/components/Loader';
 
 export default function ViewCartPage() {
   //const { cartItems: contextCartItems, removeFromCart, updateQuantity: updateContextQuantity } = useCart();
@@ -10,6 +11,7 @@ export default function ViewCartPage() {
   const [cartItems, setCartItems] = useState(contextCartItems);
   const [hasHydrated, setHasHydrated] = useState(false);
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
 
 // Debug: Log login state and cart context
   useEffect(() => {
@@ -41,6 +43,7 @@ export default function ViewCartPage() {
       }
       setHasHydrated(true);
     }
+    setLoading(false);
   }, [contextCartItems]);
 
   const getImageUrl = (path: string) => {
@@ -71,32 +74,9 @@ export default function ViewCartPage() {
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-// Function to validate and get safe image URL
-  const getSafeImageUrl = (imageUrl: string | null | undefined): string => {
-    if (!imageUrl || imageUrl.trim() === '') {
-      return '/images/package.png';
-    }
-    
-    // Check if it's a valid URL or relative path
-    try {
-      // If it's already a full URL, validate it
-      if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-        new URL(imageUrl);
-        return imageUrl;
-      }
-      
-      // If it's a relative path, check if it starts with /
-      if (imageUrl.startsWith('/')) {
-        return imageUrl;
-      }
-      
-      // If it doesn't start with /, assume it's a relative path
-      return `/${imageUrl}`;
-    } catch (error) {
-      console.warn('Invalid image URL:', imageUrl);
-      return '/images/package.png';
-    }
-  };
+  if (loading) {
+    return <Loader />;
+  }
 
   if (!hasHydrated) return null;
 
