@@ -11,6 +11,7 @@ import Footer from '@/components/layout/Footer';
 import { Dialog } from '@headlessui/react';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
+import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -116,6 +117,16 @@ export default function LoginPage() {
 
       // Set isLoggedIn to true so CartContext fetches the cart
       setIsLoggedIn(true);
+
+      // Show welcome toast notification
+      toast.success(`Welcome back ${response.user.firstName}! You are successfully logged in to the system!`, {
+        duration: 5000, // 5 seconds
+        position: 'top-right',
+        style: {
+          fontSize: '16px',
+          padding: '16px',
+        },
+      });
 
       // Redirect based on user role
       switch (response.user.role) {
