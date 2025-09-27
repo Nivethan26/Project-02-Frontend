@@ -77,9 +77,9 @@ export default function Navbar() {
   const showPublicNav = !isStaff || pathname === '/'
 
   return (
-    <nav className="sticky flex items-center px-4 md:px-16 py-4 bg-[#e3edff] w-full top-0 z-50">
-      <Link href="/">
-        <Image src="/images/logo.png" alt="SK Medicals" width={160} height={15} />
+    <nav className="sticky flex items-center px-4 md:px-16 py-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-100 w-full top-0 z-50 shadow-lg border-b border-blue-200/50">
+      <Link href="/" className="relative group">
+        <Image src="/images/logo.png" alt="SK Medicals" width={160} height={15} className="transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-lg" />
       </Link>
 
       {/* Hamburger for mobile */}
@@ -95,12 +95,74 @@ export default function Navbar() {
 
       {/* Centered navigation links (desktop) */}
       {showPublicNav && (
-        <div className="hidden md:absolute md:left-1/2 md:top-1/2 md:transform md:-translate-x-1/2 md:-translate-y-1/2 md:flex md:space-x-8">
-          <Link href="/" className="text-black hover:text-blue-600">Home</Link>
-          <Link href="/about" className="text-black hover:text-blue-600">About Us</Link>
-          <Link href="/products" className="text-black hover:text-blue-600">Products</Link>
-          <Link href="/consultations" className="text-black hover:text-blue-600">Services</Link>
-          <Link href="/contact" className="text-black hover:text-blue-600">Contact Us</Link>
+        <div className="hidden md:absolute md:left-1/2 md:top-1/2 md:transform md:-translate-x-1/2 md:-translate-y-1/2 md:flex md:items-center md:space-x-8">
+          <div className="flex items-center space-x-8">
+            <Link 
+              href="/" 
+              className={`relative px-4 py-3 font-semibold transition-all duration-500 ease-out transform ${
+                pathname === "/" 
+                  ? "text-blue-600 scale-110" 
+                  : "text-gray-700 hover:text-blue-600 hover:scale-105"
+              }`}
+            >
+              <span className="relative z-10">Home</span>
+              {pathname === "/" && (
+                <div className="absolute -top-2 -right-2 w-3 h-3 bg-blue-500 rounded-full animate-ping"></div>
+              )}
+            </Link>
+            <Link 
+              href="/about" 
+              className={`relative px-4 py-3 font-semibold transition-all duration-500 ease-out transform ${
+                pathname === "/about" 
+                  ? "text-blue-600 scale-110" 
+                  : "text-gray-700 hover:text-blue-600 hover:scale-105"
+              }`}
+            >
+              <span className="relative z-10">About Us</span>
+              {pathname === "/about" && (
+                <div className="absolute -top-2 -right-2 w-3 h-3 bg-blue-500 rounded-full animate-ping"></div>
+              )}
+            </Link>
+            <Link 
+              href="/products" 
+              className={`relative px-4 py-3 font-semibold transition-all duration-500 ease-out transform ${
+                pathname === "/products" 
+                  ? "text-blue-600 scale-110" 
+                  : "text-gray-700 hover:text-blue-600 hover:scale-105"
+              }`}
+            >
+              <span className="relative z-10">Products</span>
+              {pathname === "/products" && (
+                <div className="absolute -top-2 -right-2 w-3 h-3 bg-blue-500 rounded-full animate-ping"></div>
+              )}
+            </Link>
+            <Link 
+              href="/consultations" 
+              className={`relative px-4 py-3 font-semibold transition-all duration-500 ease-out transform ${
+                pathname === "/consultations" 
+                  ? "text-blue-600 scale-110" 
+                  : "text-gray-700 hover:text-blue-600 hover:scale-105"
+              }`}
+            >
+              <span className="relative z-10">Services</span>
+              {pathname === "/consultations" && (
+                <div className="absolute -top-2 -right-2 w-3 h-3 bg-blue-500 rounded-full animate-ping"></div>
+              )}
+            </Link>
+            <Link 
+              href="/contact" 
+              className={`relative px-4 py-3 font-semibold transition-all duration-500 ease-out transform ${
+                pathname === "/contact" 
+                  ? "text-blue-600 scale-110" 
+                  : "text-gray-700 hover:text-blue-600 hover:scale-105"
+              }`}
+            >
+              <span className="relative z-10">Contact Us</span>
+              {pathname === "/contact" && (
+                <div className="absolute -top-2 -right-2 w-3 h-3 bg-blue-500 rounded-full animate-ping"></div>
+              )}
+            </Link>
+          </div>
         </div>
       )}
 
@@ -112,49 +174,60 @@ export default function Navbar() {
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setProfileOpen((open) => !open)}
-                className="flex items-center focus:outline-none"
+                className="flex items-center focus:outline-none group"
                 aria-label="Open profile menu"
               >
-                <span className="text-gray-700 mr-2">Welcome, {user.firstName}</span>
-                <LucideUser className="w-9 h-9 text-blue-700 bg-blue-200 border-2 border-blue-400 rounded-full p-1" />
+                <span className="text-gray-700 mr-3 font-medium group-hover:text-blue-600 transition-colors duration-300">Welcome, {user.firstName}</span>
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full p-1 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3">
+                  <LucideUser className="w-full h-full text-white" />
+                </div>
               </button>
               {profileOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-blue-100 z-50">
+                <div className="absolute right-0 mt-3 w-52 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-blue-100/50 z-50 overflow-hidden animate-fade-in">
                   <Link
                     href={isCustomer ? "/dashboard/customer" : `/dashboard/${user.role}`}
-                    className="block px-4 py-2 text-gray-700 hover:bg-blue-50"
+                    className="block px-5 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 border-b border-blue-100/50"
                     onClick={() => setProfileOpen(false)}
                   >
-                    Dashboard
+                    <span className="flex items-center">
+                      <span className="mr-2">🚀</span>
+                      Dashboard
+                    </span>
                   </Link>
                   <Link
                     href="/dashboard/customer/profile"
-                    className="block px-4 py-2 text-gray-700 hover:bg-blue-50"
+                    className="block px-5 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 border-b border-blue-100/50"
                     onClick={() => setProfileOpen(false)}
                   >
-                    Profile
+                    <span className="flex items-center">
+                      <span className="mr-2">👤</span>
+                      Profile
+                    </span>
                   </Link>
                   <button
                     onClick={() => { handleLogout(); setProfileOpen(false); }}
-                    className="block w-full text-left px-4 py-2 text-red-600 hover:bg-blue-50"
+                    className="block w-full text-left px-5 py-3 text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 transition-all duration-300"
                   >
-                    Logout
+                    <span className="flex items-center">
+                      <span className="mr-2">🚪</span>
+                      Logout
+                    </span>
                   </button>
                 </div>
               )}
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="px-4 py-2 rounded-full border border-blue-600 text-blue-600 font-semibold bg-white hover:bg-blue-50 shadow-sm transition flex items-center"
+              className="px-6 py-2.5 rounded-full border-2 border-blue-600 text-blue-600 font-semibold bg-white hover:bg-blue-50 hover:border-blue-700 hover:text-blue-700 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
             >
               Login
             </Link>
             <Link
               href="/register"
-              className="px-4 py-2 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 shadow-md transition flex items-center"
+              className="px-6 py-2.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
             >
               Register
             </Link>
@@ -164,15 +237,65 @@ export default function Navbar() {
 
       {/* Mobile dropdown menu */}
       {menuOpen && (
-        <div ref={menuRef} className="absolute top-full left-0 w-full bg-white shadow-lg border-t border-blue-100 z-50 md:hidden animate-fade-in">
-          <div className="flex flex-col items-center py-4 space-y-2">
+        <div ref={menuRef} className="absolute top-full left-0 w-full bg-white/95 backdrop-blur-md shadow-2xl border-t border-blue-200/50 z-50 md:hidden animate-fade-in">
+          <div className="flex flex-col items-center py-6 space-y-3">
             {showPublicNav && (
               <>
-                <Link href="/" className="text-black hover:text-blue-600 w-full text-center py-2" onClick={() => setMenuOpen(false)}>Home</Link>
-                <Link href="/about" className="text-black hover:text-blue-600 w-full text-center py-2" onClick={() => setMenuOpen(false)}>About Us</Link>
-                <Link href="/products" className="text-black hover:text-blue-600 w-full text-center py-2" onClick={() => setMenuOpen(false)}>Products</Link>
-                <Link href="/consultations" className="text-black hover:text-blue-600 w-full text-center py-2" onClick={() => setMenuOpen(false)}>Services</Link>
-                <Link href="/contact" className="text-black hover:text-blue-600 w-full text-center py-2" onClick={() => setMenuOpen(false)}>Contact Us</Link>
+                <Link 
+                  href="/" 
+                  className={`w-full text-center py-3 px-6 rounded-xl font-medium transition-all duration-500 ${
+                    pathname === "/" 
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg transform scale-105" 
+                      : "text-gray-700 hover:text-blue-600 hover:bg-blue-50/80"
+                  }`} 
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Home
+                </Link>
+                <Link 
+                  href="/about" 
+                  className={`w-full text-center py-3 px-6 rounded-xl font-medium transition-all duration-500 ${
+                    pathname === "/about" 
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg transform scale-105" 
+                      : "text-gray-700 hover:text-blue-600 hover:bg-blue-50/80"
+                  }`} 
+                  onClick={() => setMenuOpen(false)}
+                >
+                  About Us
+                </Link>
+                <Link 
+                  href="/products" 
+                  className={`w-full text-center py-3 px-6 rounded-xl font-medium transition-all duration-500 ${
+                    pathname === "/products" 
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg transform scale-105" 
+                      : "text-gray-700 hover:text-blue-600 hover:bg-blue-50/80"
+                  }`} 
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Products
+                </Link>
+                <Link 
+                  href="/consultations" 
+                  className={`w-full text-center py-3 px-6 rounded-xl font-medium transition-all duration-500 ${
+                    pathname === "/consultations" 
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg transform scale-105" 
+                      : "text-gray-700 hover:text-blue-600 hover:bg-blue-50/80"
+                  }`} 
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Services
+                </Link>
+                <Link 
+                  href="/contact" 
+                  className={`w-full text-center py-3 px-6 rounded-xl font-medium transition-all duration-500 ${
+                    pathname === "/contact" 
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg transform scale-105" 
+                      : "text-gray-700 hover:text-blue-600 hover:bg-blue-50/80"
+                  }`} 
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Contact Us
+                </Link>
               </>
             )}
             <div className="border-t border-blue-100 w-full my-2" />

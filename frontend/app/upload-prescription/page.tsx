@@ -23,11 +23,6 @@ export default function UploadPrescriptionPage() {
   const router = useRouter();
   const [files, setFiles] = useState<File[]>([]);
   const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    city: "",
-    address: "",
     duration: "",
     payment: "",
     gender: "",
@@ -36,6 +31,13 @@ export default function UploadPrescriptionPage() {
     substitutes: "",
     notes: "",
     agree: false,
+  });
+  const [userDetails, setUserDetails] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    city: "",
+    address: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -85,21 +87,38 @@ export default function UploadPrescriptionPage() {
   }, [slides.length]);
 
   useEffect(() => {
-    const user = sessionStorage.getItem("user");
-    if (!user) {
+    const token = sessionStorage.getItem("token");
+    if (!token) {
       router.push("/login");
       return;
     }
-    try {
-      const userData = JSON.parse(user);
-      if (userData.role !== "customer") {
-        router.push("/dashboard");
-        return;
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/api/auth/profile", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) {
+          router.push("/login");
+          return;
+        }
+        const data = await res.json();
+        if (data.role && data.role !== "customer") {
+          router.push("/dashboard");
+          return;
+        }
+        setUserDetails({
+          name: (data.firstName ? data.firstName + ' ' : '') + (data.lastName || ''),
+          email: data.email || "",
+          phone: data.phone || "",
+          city: data.city || "",
+          address: data.address || "",
+        });
+        setLoading(false);
+      } catch {
+        router.push("/login");
       }
-      setLoading(false);
-    } catch {
-      router.push("/login");
-    }
+    };
+    fetchProfile();
   }, [router]);
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -157,24 +176,24 @@ export default function UploadPrescriptionPage() {
       return;
     }
 
-    // Validation for required fields
-    if (!form.name.trim()) {
+    // Validation for required fields (personal info is now fetched, not input)
+    if (!userDetails.name.trim()) {
       showToast('Your Name is required.', 'error');
       return;
     }
-    if (!form.email.trim()) {
+    if (!userDetails.email.trim()) {
       showToast('Email Address is required.', 'error');
       return;
     }
-    if (!form.phone.trim()) {
+    if (!userDetails.phone.trim()) {
       showToast('Phone Number is required.', 'error');
       return;
     }
-    if (!form.city.trim()) {
+    if (!userDetails.city.trim()) {
       showToast('City is required.', 'error');
       return;
     }
-    if (!form.address.trim()) {
+    if (!userDetails.address.trim()) {
       showToast('Address is required.', 'error');
       return;
     }
@@ -213,16 +232,20 @@ export default function UploadPrescriptionPage() {
       // Create FormData object to handle file uploads
       const formData = new FormData();
       
-      // Append all form fields
+      // Append prescription-specific fields only
       Object.entries(form).forEach(([key, value]) => {
         formData.append(key, value.toString());
       });
-      
+      // Append user details (from session)
+      formData.append('name', userDetails.name);
+      formData.append('email', userDetails.email);
+      formData.append('phone', userDetails.phone);
+      formData.append('city', userDetails.city);
+      formData.append('address', userDetails.address);
       // Append prescription files
       files.forEach((file) => {
         formData.append('prescription', file);
       });
-
       // Automatically include customerId from sessionStorage
       const user = sessionStorage.getItem('user');
       if (user) {
@@ -247,18 +270,13 @@ export default function UploadPrescriptionPage() {
       const data = await response.json();
       showToast('Prescription submitted successfully!', 'success');
       
-      // Reset form
+      // Reset only prescription-specific fields
       setForm({
-        name: "",
-        email: "",
-        phone: "",
-        address: "",
-        city: "",
         duration: "",
-        gender: "",
-        allergies: "",
-        hasAllergies: "",
         payment: "",
+        gender: "",
+        hasAllergies: "",
+        allergies: "",
         substitutes: "",
         notes: "",
         agree: false,
@@ -430,76 +448,68 @@ export default function UploadPrescriptionPage() {
                     </svg>
                     Personal Information
                   </h3>
+                  
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                    <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Your Name<span className="text-red-500 ml-1">*</span>
+                        Your Name
                       </label>
                       <input
                         name="name"
-                        value={form.name}
-                        onChange={handleChange}
-                        required
-                        className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-800"
-                        placeholder="Enter your full name"
+                        value={userDetails.name}
+                        readOnly
+                        className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-gray-100 text-gray-800 cursor-not-allowed"
+                        tabIndex={-1}
                       />
-                </div>
-
-                <div>
+                    </div>
+                    <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Email Address<span className="text-red-500 ml-1">*</span>
+                        Email Address
                       </label>
                       <input
                         name="email"
                         type="email"
-                        value={form.email}
-                        onChange={handleChange}
-                        required
-                        className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-800"
-                        placeholder="Enter your email address"
+                        value={userDetails.email}
+                        readOnly
+                        className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-gray-100 text-gray-800 cursor-not-allowed"
+                        tabIndex={-1}
                       />
-                </div>
-
-                <div>
+                    </div>
+                    <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Phone Number<span className="text-red-500 ml-1">*</span>
+                        Phone Number
                       </label>
                       <input
                         name="phone"
-                        value={form.phone}
-                        onChange={handleChange}
-                        required
-                        className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-800"
-                        placeholder="Enter your phone number"
+                        value={userDetails.phone}
+                        readOnly
+                        className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-gray-100 text-gray-800 cursor-not-allowed"
+                        tabIndex={-1}
                       />
-                </div>
-
-                <div>
+                    </div>
+                    <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        City<span className="text-red-500 ml-1">*</span>
+                        City
                       </label>
                       <input
                         name="city"
-                        value={form.city}
-                        onChange={handleChange}
-                        required
-                        className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-800"
-                        placeholder="Enter your city"
+                        value={userDetails.city}
+                        readOnly
+                        className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-gray-100 text-gray-800 cursor-not-allowed"
+                        tabIndex={-1}
                       />
-                </div>
-
-                <div className="md:col-span-2">
+                    </div>
+                    <div className="md:col-span-2">
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Address<span className="text-red-500 ml-1">*</span>
+                        Address
                       </label>
                       <input
                         name="address"
-                        value={form.address}
-                        onChange={handleChange}
-                        required
-                        className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-800"
-                        placeholder="Enter your complete address"
+                        value={userDetails.address}
+                        readOnly
+                        className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-gray-100 text-gray-800 cursor-not-allowed"
+                        tabIndex={-1}
                       />
                     </div>
                   </div>
