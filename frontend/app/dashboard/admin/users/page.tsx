@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Sidebar from '@/components/layout/Sidebar';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import UserDeleteModal from '@/components/UserDeleteModal';
 import userService, { User } from '@/services/user';
 
 export default function UsersPage() {
@@ -14,6 +15,8 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -54,19 +57,17 @@ export default function UsersPage() {
     }
   };
 
-  const handleDelete = async (userId: string) => {
-    if (!userId) {
-      toast.error('Invalid user ID');
-      return;
-    }
+  const handleDeleteClick = (user: User) => {
+    setUserToDelete(user);
+    setShowDeleteModal(true);
+  };
 
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-      return;
-    }
-
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
+    
     try {
       setError(null);
-      await userService.deleteUser(userId);
+      await userService.deleteUser(userToDelete._id);
       toast.success('User deleted successfully');
       fetchUsers(); // Refresh the list
     } catch (error) {
@@ -74,7 +75,15 @@ export default function UsersPage() {
       const message = error instanceof Error ? error.message : 'Failed to delete user';
       setError(message);
       toast.error(message);
+    } finally {
+      setShowDeleteModal(false);
+      setUserToDelete(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setUserToDelete(null);
   };
 
   const handleEdit = (userId: string) => {
@@ -273,7 +282,7 @@ export default function UsersPage() {
                             )}
                             {user.role !== 'admin' && (
                               <button 
-                                onClick={() => handleDelete(user._id)}
+                                onClick={() => handleDeleteClick(user)}
                                 className="text-red-600 hover:text-red-900 transition-colors duration-200"
                                 title="Delete user"
                               >
@@ -291,6 +300,14 @@ export default function UsersPage() {
           </div>
         </main>
       </div>
+      
+      {/* Delete Confirmation Modal */}
+      <UserDeleteModal
+        open={showDeleteModal}
+        userName={userToDelete ? `${userToDelete.firstName} ${userToDelete.lastName}` : undefined}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </ProtectedRoute>
   );
 } 
