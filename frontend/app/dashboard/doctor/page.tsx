@@ -3,38 +3,55 @@ import Sidebar from '@/components/layout/Sidebar';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { CalendarCheck, User, Clock, Stethoscope, ArrowRight } from 'lucide-react';
 
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+
 export default function DoctorDashboardPage() {
-  // Dummy stats for illustration
-  const stats = [
-    {
-      label: "Today's Appointments",
-      value: 5,
-      icon: <CalendarCheck className="w-8 h-8 text-blue-500" />,
-      color: 'bg-blue-100',
-      link: '/dashboard/doctor/appointments',
-    },
-    {
-      label: 'Upcoming Appointments',
-      value: 12,
-      icon: <Clock className="w-8 h-8 text-green-500" />,
-      color: 'bg-green-100',
-      link: '/dashboard/doctor/appointments',
-    },
-    {
-      label: 'Patients',
-      value: 28,
-      icon: <User className="w-8 h-8 text-purple-500" />,
-      color: 'bg-purple-100',
-      link: '/dashboard/doctor/appointments',
-    },
-    {
-      label: 'My Availability',
-      value: 'Set',
-      icon: <Stethoscope className="w-8 h-8 text-yellow-500" />,
-      color: 'bg-yellow-100',
-      link: '/dashboard/doctor/availability',
-    },
-  ];
+  const [stats, setStats] = useState([
+    { label: "Today's Appointments", value: 0, icon: <CalendarCheck className="w-8 h-8 text-blue-500" />, color: 'bg-blue-100', link: '/dashboard/doctor/appointments' },
+    { label: 'Upcoming Appointments', value: 0, icon: <Clock className="w-8 h-8 text-green-500" />, color: 'bg-green-100', link: '/dashboard/doctor/appointments' },
+    { label: 'Patients', value: 0, icon: <User className="w-8 h-8 text-purple-500" />, color: 'bg-purple-100', link: '/dashboard/doctor/appointments' },
+    { label: 'My Availability', value: 'Unset', icon: <Stethoscope className="w-8 h-8 text-yellow-500" />, color: 'bg-yellow-100', link: '/dashboard/doctor/availability' },
+  ]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+        // Fetch appointments
+        const res = await axios.get("http://localhost:8000/api/appointment/doctor", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const appointments = res.data || [];
+        const todayStr = new Date().toISOString().slice(0, 10);
+  const todayCount = appointments.filter((a: any) => a.date === todayStr && a.status === 'confirmed').length;
+  const upcomingCount = appointments.filter((a: any) => a.date > todayStr && a.status === 'confirmed').length;
+  // Unique patients
+  const patientIds = new Set(appointments.map((a: any) => a.customer?._id).filter(Boolean));
+        // Fetch availability
+        const availRes = await axios.get("http://localhost:8000/api/doctor/availability", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const avail = availRes.data || [];
+        const availStatus = avail.length > 0 ? 'Set' : 'Unset';
+        setStats([
+          { label: "Today's Appointments", value: todayCount, icon: <CalendarCheck className="w-8 h-8 text-blue-500" />, color: 'bg-blue-100', link: '/dashboard/doctor/appointments' },
+          { label: 'Upcoming Appointments', value: upcomingCount, icon: <Clock className="w-8 h-8 text-green-500" />, color: 'bg-green-100', link: '/dashboard/doctor/appointments' },
+          { label: 'Patients', value: patientIds.size, icon: <User className="w-8 h-8 text-purple-500" />, color: 'bg-purple-100', link: '/dashboard/doctor/appointments' },
+          { label: 'My Availability', value: availStatus, icon: <Stethoscope className="w-8 h-8 text-yellow-500" />, color: 'bg-yellow-100', link: '/dashboard/doctor/availability' },
+        ]);
+      } catch (err) {
+        setError("Failed to fetch dashboard stats.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
 
   const quickLinks = [
     {
