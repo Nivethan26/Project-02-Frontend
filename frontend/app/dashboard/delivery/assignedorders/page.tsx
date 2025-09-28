@@ -28,7 +28,7 @@ export default function AssignedOrderPage() {
       try {
         setLoading(true);
         setError(null);
-        const data = await getOrdersByStatus('pending,shipped');
+  const data = await getOrdersByStatus('confirmed,shipped');
         setOrders(data);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch orders');
@@ -64,10 +64,11 @@ export default function AssignedOrderPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending':
-        return 'bg-amber-100 text-amber-800 border-amber-200';
-      case 'shipped':
+      // no 'pending' status for delivery
+      case 'confirmed':
         return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'shipped':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'delivered':
         return 'bg-emerald-100 text-emerald-800 border-emerald-200';
       default:
@@ -77,8 +78,9 @@ export default function AssignedOrderPage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending':
-        return <FaClock className="w-4 h-4" />;
+      // no 'pending' status for delivery
+      case 'confirmed':
+        return <FaCheckCircle className="w-4 h-4 text-blue-600" />;
       case 'shipped':
         return <FaTruck className="w-4 h-4" />;
       case 'delivered':
@@ -90,8 +92,7 @@ export default function AssignedOrderPage() {
 
   const getPriorityColor = (status: string) => {
     switch (status) {
-      case 'pending':
-        return 'bg-amber-500';
+      // no 'pending' status for delivery
       case 'shipped':
         return 'bg-blue-500';
       case 'delivered':
@@ -178,16 +179,16 @@ export default function AssignedOrderPage() {
                         onChange={(e) => setFilterStatus(e.target.value)}
                         className="px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-transparent bg-slate-50 text-slate-700"
                       >
-                        <option value="all">All Orders</option>
-                              <option value="pending">Pending</option>
-                              <option value="shipped">Shipped</option>
-                              <option value="delivered">Delivered</option>
+        <option value="all">All Orders</option>
+  {/* Pending removed */}
+        <option value="confirmed">Confirmed</option>
+        <option value="shipped">Shipped</option>
+        <option value="delivered">Delivered</option>
                             </select>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
-                    <span className="text-sm text-slate-600">Pending</span>
+                    {/* Pending removed */}
                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                     <span className="text-sm text-slate-600">Shipped</span>
                     <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
@@ -305,7 +306,8 @@ export default function AssignedOrderPage() {
                                   onChange={(e) => handleStatusChange(order.id, e.target.value)}
                                   className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-transparent bg-white text-slate-700 text-sm font-medium shadow-sm hover:border-slate-300 transition-colors"
                                 >
-                                  <option value="pending">Pending </option>
+                                  {/* Pending removed */}
+                                  <option value="confirmed">Confirmed </option>
                                   <option value="shipped">Shipped </option>
                                   <option value="delivered">Delivered </option>
                                 </select>
@@ -323,8 +325,7 @@ export default function AssignedOrderPage() {
                       <div className="flex items-center space-x-4">
                         <span>Showing {filteredOrders.length} of {orders.length} orders</span>
                         <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
-                          <span>{filteredOrders.filter(o => o.status === 'pending').length} Pending</span>
+                          {/* Pending count removed */}
                           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                           <span>{filteredOrders.filter(o => o.status === 'shipped').length} Shipped</span>
                           <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
