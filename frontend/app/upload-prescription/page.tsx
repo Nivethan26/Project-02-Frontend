@@ -269,7 +269,6 @@ export default function UploadPrescriptionPage() {
 
       const data = await response.json();
       showToast('Prescription submitted successfully!', 'success');
-      
       // Reset only prescription-specific fields
       setForm({
         duration: "",
@@ -282,6 +281,10 @@ export default function UploadPrescriptionPage() {
         agree: false,
       });
       setFiles([]);
+      // Redirect to prescriptions dashboard after short delay
+      setTimeout(() => {
+        window.location.href = "http://localhost:3000/dashboard/customer/prescriptions";
+      }, 1200);
     } catch (error) {
       console.error('Error uploading prescription:', error);
       showToast('Failed to upload prescription. Please try again.', 'error');
