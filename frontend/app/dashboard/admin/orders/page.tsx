@@ -19,7 +19,7 @@ interface AdminOrder {
   subtotal: number;
   shipping: number;
   tax: number;
-  status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | 'completed';
   items: OrderItem[];
   itemsCount: number;
   paymentMethod: string;
@@ -30,17 +30,19 @@ interface AdminOrder {
 }
 
 const statusColors: Record<AdminOrder['status'], string> = {
-  pending: "bg-yellow-100 text-yellow-800",
+  confirmed: "bg-blue-100 text-blue-800",
   shipped: "bg-purple-100 text-purple-800",
   delivered: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800"
+  cancelled: "bg-red-100 text-red-800",
+  completed: "bg-gray-100 text-gray-800"
 };
 
 const statusLabels: Record<AdminOrder['status'], string> = {
-  pending: "Pending",
+  confirmed: "Confirmed",
   shipped: "Shipped",
   delivered: "Delivered",
-  cancelled: "Cancelled"
+  cancelled: "Cancelled",
+  completed: "Completed"
 };
 
 export default function OrdersPage() {
@@ -48,7 +50,7 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState<AdminOrder['status'] | 'all'>("all");
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [newStatus, setNewStatus] = useState<AdminOrder['status']>('pending');
+  const [newStatus, setNewStatus] = useState<AdminOrder['status']>('confirmed');
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -221,7 +223,7 @@ export default function OrdersPage() {
                   onChange={(e) => setStatusFilter(e.target.value as AdminOrder['status'] | 'all')}
                 >
                   <option value="all">All Status</option>
-                  <option value="pending">Pending</option>
+                  <option value="confirmed">Confirmed</option>
                   <option value="shipped">Shipped</option>
                   <option value="delivered">Delivered</option>
                   <option value="completed">Completed</option>
@@ -261,7 +263,7 @@ export default function OrdersPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {orders.map((order) => (
+                    {orders.filter(order => order.status !== 'pending').map((order) => (
                       <tr key={order.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.orderNumber}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -273,7 +275,7 @@ export default function OrdersPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(order.date)}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Rs.{order.total.toFixed(2)}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[order.status]}`}>
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[order.status]}`}> 
                             {statusLabels[order.status]}
                           </span>
                         </td>
@@ -530,7 +532,6 @@ export default function OrdersPage() {
                       value={newStatus}
                       onChange={e => setNewStatus(e.target.value as AdminOrder['status'])}
                     >
-                      <option value="pending">Pending</option>
                       <option value="shipped">Shipped</option>
                       <option value="delivered">Delivered</option>
                       <option value="completed">Completed</option>
