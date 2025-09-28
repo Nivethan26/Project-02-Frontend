@@ -32,7 +32,22 @@ function BookingModal({ doctor, open, onClose, user }: BookingModalProps & { use
         token ? { headers: { Authorization: `Bearer ${token}` } } : undefined
       )
         .then(res => {
-          setSlots(res.data);
+          // Filter slots: only exclude slots with status 'confirmed', allow 'cancelled' and others
+          const filteredSlots = res.data.map((slotObj: any) => ({
+            ...slotObj,
+            slots: Array.isArray(slotObj.slots)
+              ? slotObj.slots.filter((time: string) => {
+                  // If slotObj.bookings exists, check status for each time
+                  if (slotObj.bookings && Array.isArray(slotObj.bookings)) {
+                    const booking = slotObj.bookings.find((b: any) => b.time === time);
+                    return !booking || booking.status !== 'confirmed';
+                  }
+                  // If no bookings info, keep all times
+                  return true;
+                })
+              : slotObj.slots
+          }));
+          setSlots(filteredSlots);
         })
         .catch(() => setSlots([]))
         .finally(() => setLoading(false));
