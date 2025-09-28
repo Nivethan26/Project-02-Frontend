@@ -405,9 +405,10 @@ export default function CustomerPrescriptionsPage() {
 
   // Disable action buttons when order has a workflow status
   const isActionDisabled = !!(
-    order &&
-    ["processing", "shipped", "delivered", "completed", "cancelled"].includes(
-      order.status
+    order && (
+      order.customizationConfirmed ||
+      order.status === "confirmed" ||
+      ["processing", "shipped", "delivered", "completed", "cancelled"].includes(order.status)
     )
   );
 
@@ -873,99 +874,103 @@ export default function CustomerPrescriptionsPage() {
                                 </span>
                               </div>
                               <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                                {order && !order.customizationConfirmed && (
-                                  <button
-                                    className={`flex-1 sm:flex-none inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-white font-semibold shadow-md transition-all duration-150 ${
-                                      isActionDisabled
-                                        ? "bg-green-600/60 cursor-not-allowed"
-                                        : "bg-green-600 hover:bg-green-700 hover:shadow-lg active:scale-[0.98]"
-                                    }`}
-                                    onClick={() => setShowReminderPopup(true)}
-                                    disabled={
-                                      isActionDisabled ||
-                                      pendingOrderConfirmation
-                                    }
-                                    title={
-                                      isActionDisabled
-                                        ? "This action is disabled for current order status"
-                                        : "Confirm this order"
-                                    }
-                                  >
-                                    <svg
-                                      className="w-5 h-5 mr-2"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      strokeWidth="2"
-                                      viewBox="0 0 24 24"
+                                {order && !(order.customizationConfirmed || order.status === "confirmed") && (
+                                  <>
+                                    <button
+                                      className={`flex-1 sm:flex-none inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-white font-semibold shadow-md transition-all duration-150 ${
+                                        isActionDisabled
+                                          ? "bg-green-600/60 cursor-not-allowed"
+                                          : "bg-green-600 hover:bg-green-700 hover:shadow-lg active:scale-[0.98]"
+                                      }`}
+                                      onClick={() => setShowReminderPopup(true)}
+                                      disabled={
+                                        isActionDisabled ||
+                                        pendingOrderConfirmation
+                                      }
+                                      title={
+                                        isActionDisabled
+                                          ? "This action is disabled for current order status"
+                                          : "Confirm this order"
+                                      }
                                     >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M5 13l4 4L19 7"
-                                      />
-                                    </svg>
-                                    Confirm Order
-                                  </button>
+                                      <svg
+                                        className="w-5 h-5 mr-2"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          d="M5 13l4 4L19 7"
+                                        />
+                                      </svg>
+                                      Confirm Order
+                                    </button>
+                                    <button
+                                      className={`flex-1 sm:flex-none inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-white font-semibold shadow-md transition-all duration-150 ${
+                                        isActionDisabled
+                                          ? "bg-red-600/60 cursor-not-allowed"
+                                          : "bg-red-600 hover:bg-red-700 hover:shadow-lg active:scale-[0.98]"
+                                      }`}
+                                      onClick={async () => {
+                                        if (
+                                          !window.confirm(
+                                            "Are you sure you want to cancel and delete this order?"
+                                          )
+                                        )
+                                          return;
+                                        try {
+                                          const response = await fetch(
+                                            `http://localhost:8000/api/orders/${order.id}`,
+                                            { method: "DELETE" }
+                                          );
+                                          if (!response.ok)
+                                            throw new Error(
+                                              "Failed to delete order"
+                                            );
+                                          showToast(
+                                            "Order cancelled and deleted",
+                                            "success"
+                                          );
+                                          setOrder(null);
+                                          setShowModal(false);
+                                          // Refresh prescription list after cancellation
+                                          fetchPrescriptions();
+                                        } catch (error) {
+                                          showToast(
+                                            "Failed to delete order",
+                                            "error"
+                                          );
+                                        }
+                                      }}
+                                      disabled={
+                                        isActionDisabled || pendingOrderConfirmation
+                                      }
+                                      title={
+                                        isActionDisabled
+                                          ? "This action is disabled for current order status"
+                                          : "Cancel and delete this order"
+                                      }
+                                    >
+                                      <svg
+                                        className="w-5 h-5 mr-2"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          d="M6 18L18 6M6 6l12 12"
+                                        />
+                                      </svg>
+                                      Cancel Order
+                                    </button>
+                                  </>
                                 )}
-                                <button
-                                  className={`flex-1 sm:flex-none inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-white font-semibold shadow-md transition-all duration-150 ${
-                                    isActionDisabled
-                                      ? "bg-red-600/60 cursor-not-allowed"
-                                      : "bg-red-600 hover:bg-red-700 hover:shadow-lg active:scale-[0.98]"
-                                  }`}
-                                  onClick={async () => {
-                                    if (
-                                      !window.confirm(
-                                        "Are you sure you want to cancel and delete this order?"
-                                      )
-                                    )
-                                      return;
-                                    try {
-                                      const response = await fetch(
-                                        `http://localhost:8000/api/orders/${order.id}`,
-                                        { method: "DELETE" }
-                                      );
-                                      if (!response.ok)
-                                        throw new Error(
-                                          "Failed to delete order"
-                                        );
-                                      showToast(
-                                        "Order cancelled and deleted",
-                                        "success"
-                                      );
-                                      setOrder(null);
-                                      setShowModal(false);
-                                    } catch (error) {
-                                      showToast(
-                                        "Failed to delete order",
-                                        "error"
-                                      );
-                                    }
-                                  }}
-                                  disabled={
-                                    isActionDisabled || pendingOrderConfirmation
-                                  }
-                                  title={
-                                    isActionDisabled
-                                      ? "This action is disabled for current order status"
-                                      : "Cancel and delete this order"
-                                  }
-                                >
-                                  <svg
-                                    className="w-5 h-5 mr-2"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      d="M6 18L18 6M6 6l12 12"
-                                    />
-                                  </svg>
-                                  Cancel Order
-                                </button>
                               </div>
                             </>
                           ) : (
