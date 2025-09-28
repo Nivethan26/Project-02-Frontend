@@ -108,6 +108,18 @@ export default function OrderConfirmationPage() {
         try {
           const parsedData = JSON.parse(orderDataFromStorage);
           console.log('Parsed order data:', parsedData);
+          // Update order status to confirmed if not already
+          if (parsedData.orderId) {
+            try {
+              await fetch(`http://localhost:8000/api/orders/${parsedData.orderId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'confirmed' })
+              });
+            } catch (err) {
+              console.error('Failed to update order status to confirmed:', err);
+            }
+          }
           setOrderData({
             ...parsedData,
             estimatedDelivery: calculateEstimatedDelivery()

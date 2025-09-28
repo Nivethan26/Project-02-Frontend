@@ -91,10 +91,9 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Clear any existing auth data before login
+      // ...existing code...
       authService.logout();
-      
-      // Remember email if checked
+      // ...existing code...
       if (rememberMe) {
         localStorage.setItem('rememberMe', 'true');
         localStorage.setItem('rememberedEmail', formData.email);
@@ -102,33 +101,23 @@ export default function LoginPage() {
         localStorage.removeItem('rememberMe');
         localStorage.removeItem('rememberedEmail');
       }
-      
       const response = await authService.login(formData.email, formData.password);
-      
-      // Check if user is active
+      // ...existing code...
       if (response.user.status === 'inactive') {
         throw new Error('Your account is inactive. Please contact support.');
       }
-
-      // Save user to localStorage for session persistence
+      // ...existing code...
       localStorage.setItem('user', JSON.stringify(response.user));
-      // Also store userId in sessionStorage for booking/payment
       sessionStorage.setItem('userId', response.user._id);
-
-      // Set isLoggedIn to true so CartContext fetches the cart
       setIsLoggedIn(true);
-
-      // Show welcome toast notification
       toast.success(`Welcome back ${response.user.firstName}! You are successfully logged in to the system!`, {
-        duration: 5000, // 5 seconds
+        duration: 5000,
         position: 'top-right',
         style: {
           fontSize: '16px',
           padding: '16px',
         },
       });
-
-      // Redirect based on user role
       switch (response.user.role) {
         case 'admin':
           router.push('/dashboard/admin');
@@ -154,13 +143,15 @@ export default function LoginPage() {
         default:
           throw new Error('Invalid user role');
       }
-    } catch (err: unknown) {
-      if (err instanceof Error) {
+    } catch (err: any) {
+      // Show friendly error for 401
+      if (err?.response?.status === 401) {
+        setError('Username or password is incorrect');
+      } else if (err instanceof Error) {
         setError(err.message);
       } else {
         setError('An error occurred during login. Please try again.');
       }
-      // Clear any partial auth data
       authService.logout();
     } finally {
       setLoading(false);
