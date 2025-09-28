@@ -154,7 +154,9 @@ export default function RegisterPage() {
 
     // Phone validation
     const phoneRegex = /^\+?[\d\s-]{10,}$/;
-    if (formData.phone && !phoneRegex.test(formData.phone)) {
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!phoneRegex.test(formData.phone)) {
       newErrors.phone = 'Please enter a valid phone number';
     }
 
