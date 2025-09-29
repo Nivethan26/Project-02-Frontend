@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useCart } from '@/context/CartContext';
 import { useRouter, usePathname } from 'next/navigation';
@@ -27,10 +26,19 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({ product }) => {
     const pathname = usePathname();
 
     const cartItem = cartItems.find(item => item.id === product._id);
+    const getImageUrl = (path?: string) => {
+        if (!path) return '/placeholder.png';
+        const asString = String(path).trim();
+        // If already an absolute URL, return it
+        if (asString.startsWith('http://') || asString.startsWith('https://')) return asString;
+        // Normalize slashes and extract filename
+        const cleaned = asString.replace(/\\/g, '/');
+        const filename = cleaned.split('/').pop();
+        if (!filename) return '/placeholder.png';
+        return `http://localhost:8000/uploads/products/${filename}`;
+    };
 
-    const imageUrl = product.image
-        ? `http://localhost:8000/${product.image.replace(/\\/g, '/')}`
-        : '/placeholder.png';
+        const imageUrl = getImageUrl(product.image);
 
     const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault(); // Prevent Link navigation
@@ -75,7 +83,7 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({ product }) => {
     return (
         <Link href={`/products/${product._id}`} className="block h-full">
             <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center h-full transition-transform transform hover:-translate-y-1 duration-300 ease-in-out">
-                <div className="relative w-28 h-28 mb-3">
+                {/* <div className="relative w-28 h-28 mb-3">
                     <Image 
                         src={imageUrl} 
                         alt={product.name} 
@@ -83,7 +91,7 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({ product }) => {
                         className="object-contain rounded-lg"
                         sizes="112px"
                     />
-                </div>
+                </div> */}
                 <div className="text-center font-semibold text-gray-800 mb-1 flex-grow">{product.name}</div>
                 <div className="text-teal-700 font-bold mb-4">LKR {displayPrice.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
                 
