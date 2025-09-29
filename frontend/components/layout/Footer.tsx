@@ -47,20 +47,25 @@ export default function Footer() {
               <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-blue-200/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             </h3>
             <ul className="space-y-3">
-              {["About Us", "Products", "Services", "Blog & News"].map((item, index) => (
+              {[
+                { label: "About Us", href: "/about" },
+                { label: "Products", href: "/products" },
+                { label: "Services", href: "/consultations" },
+                { label: "Blog & News", href: "#" }
+              ].map((item, index) => (
                 <li
-                  key={item}
+                  key={item.label}
                   className="transform transition-all duration-300 hover:translate-x-3"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <a
-                    href="#"
+                  <Link
+                    href={item.href}
                     className="text-blue-100 hover:text-white transition-all duration-300 relative group text-sm flex items-center"
                   >
                     <span className="w-0 h-0.5 bg-gradient-to-r from-blue-300 to-purple-300 group-hover:w-4 transition-all duration-300 mr-0 group-hover:mr-2"></span>
-                    <span className="relative z-10">{item}</span>
+                    <span className="relative z-10">{item.label}</span>
                     <div className="absolute inset-0 bg-white/5 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-md -mx-2 px-2"></div>
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -134,16 +139,16 @@ export default function Footer() {
                     </svg>
                   ),
                 },
-                {
-                  name: "LinkedIn",
-                  color: "hover:text-blue-200 hover:shadow-blue-200/50",
-                  bgColor: "hover:bg-gradient-to-r hover:from-blue-400/20 hover:to-cyan-400/20",
-                  icon: (
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.761 0 5-2.239 5-5v-14c0-2.761-2.239-5-5-5zm-11 19h-3v-10h3v10zm-1.5-11.268c-.966 0-1.75-.784-1.75-1.75s.784-1.75 1.75-1.75 1.75.784 1.75 1.75-.784 1.75-1.75 1.75zm13.5 11.268h-3v-5.604c0-1.337-.025-3.063-1.868-3.063-1.868 0-2.154 1.459-2.154 2.968v5.699h-3v-10h2.881v1.367h.041c.401-.761 1.381-1.563 2.841-1.563 3.039 0 3.6 2.001 3.6 4.601v5.595z" />
-                    </svg>
-                  ),
-                },
+                // {
+                //   name: "LinkedIn",
+                //   color: "hover:text-blue-200 hover:shadow-blue-200/50",
+                //   bgColor: "hover:bg-gradient-to-r hover:from-blue-400/20 hover:to-cyan-400/20",
+                //   icon: (
+                //     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                //       <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.761 0 5-2.239 5-5v-14c0-2.761-2.239-5-5-5zm-11 19h-3v-10h3v10zm-1.5-11.268c-.966 0-1.75-.784-1.75-1.75s.784-1.75 1.75-1.75 1.75.784 1.75 1.75-.784 1.75-1.75 1.75zm13.5 11.268h-3v-5.604c0-1.337-.025-3.063-1.868-3.063-1.868 0-2.154 1.459-2.154 2.968v5.699h-3v-10h2.881v1.367h.041c.401-.761 1.381-1.563 2.841-1.563 3.039 0 3.6 2.001 3.6 4.601v5.595z" />
+                //     </svg>
+                //   ),
+                // },
                 {
                   name: "Twitter",
                   color: "hover:text-blue-100 hover:shadow-blue-100/50",

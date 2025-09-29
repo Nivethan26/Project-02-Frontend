@@ -19,7 +19,7 @@ export default function TestimonialSection() {
             variant="outline"
             className="rounded-full border-gray-400 text-gray-700 hover:bg-gray-100"
           >
-            All Review
+            Reviews
           </Button>
         </div>
 
