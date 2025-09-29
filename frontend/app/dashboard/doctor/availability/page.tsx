@@ -170,9 +170,18 @@ export default function AvailabilityPage() {
         <Sidebar role="doctor" />
         <main className="flex-1 md:ml-64 p-6">
           <div className="w-full max-w-7xl mx-auto">
-            <h1 className="text-2xl font-bold text-gray-800">Manage Your Availability</h1>
-            <p className="text-sm text-gray-500 mb-6">Select a date and then choose your available time slots. Changes are saved automatically.</p>
-            
+               <div className="space-y-2">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-1 h-8 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full"></div>
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
+                      Manage Your Availability
+                    </h1>
+                  </div>
+                  <p className="text-gray-600 text-lg font-medium ml-4">
+                    Pick a date in the calendar. Click a time slot to mark it as available. Click the same slot again to remove it. To remove all slots for a day, use the trash icon next to that date in the list.
+                  </p>
+                </div>
+          
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               {/* Calendar Section */}
               <div className="xl:col-span-2 bg-white p-6 rounded-lg shadow-sm">

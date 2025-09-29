@@ -79,6 +79,7 @@ export default function CustomerConsultaionsPage() {
 				<main className="flex-1 ml-64 p-8">
 					<div className="max-w-7xl mx-auto">
 						<h1 className="text-4xl font-bold text-black mb-8">Consultation Bookings</h1>
+						<p>Please plan to arrive on time and keep your appointment. If you are unable to attend, then cancel the appointment within 24 hours. Early cancellations help us offer your slot to another patient.</p>
 						<div className="bg-white rounded-lg shadow p-6">
 							{loading ? (
 								<div className="text-black">Loading...</div>

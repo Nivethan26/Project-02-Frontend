@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 
@@ -32,7 +33,7 @@ const cardTypes = {
   generic: { name: 'Credit Card', color: 'from-gray-600 to-gray-800' },
 };
 
-export default function PaymentForm({ total, shipping, tax, onSuccess }: PaymentFormProps) {
+export default function PaymentForm({  onSuccess }: PaymentFormProps) {
   const [cardInfo, setCardInfo] = useState<CardInfo>({
     cardNumber: '',
     expiryDate: '',
@@ -164,7 +165,7 @@ export default function PaymentForm({ total, shipping, tax, onSuccess }: Payment
           {errors.cvv && <p className="text-red-500 text-sm mt-1">{errors.cvv}</p>}
         </div>
       </div>
-      <div className="mb-6">
+      {/* <div className="mb-6">
         <div className="flex justify-between items-center">
           <span className="font-medium text-slate-700">Shipping</span>
           <span className="font-semibold text-slate-800">LKR {shipping.toFixed(2)}</span>
@@ -177,7 +178,7 @@ export default function PaymentForm({ total, shipping, tax, onSuccess }: Payment
           <span className="font-bold text-lg text-slate-800">Total</span>
           <span className="font-bold text-2xl text-blue-700">LKR {total.toFixed(2)}</span>
         </div>
-      </div>
+      </div> */}
       <button
         type="submit"
         disabled={loading}

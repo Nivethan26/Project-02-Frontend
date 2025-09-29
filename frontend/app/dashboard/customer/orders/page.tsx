@@ -64,7 +64,14 @@ export default function CustomerOrderPage() {
   useEffect(() => {
     fetchOrders();
   }, []);
-
+  const getImageUrl = (path?: string) => {
+    if (!path) return '/placeholder.png';
+    const s = String(path).trim();
+    if (s.startsWith('http://') || s.startsWith('https://')) return s;
+    const filename = s.replace(/\\/g, '/').split('/').pop();
+    if (!filename) return '/placeholder.png';
+    return `http://localhost:8000/uploads/products/${filename}`;
+  };
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-800';
@@ -295,21 +302,21 @@ export default function CustomerOrderPage() {
                           {selectedOrder.items.map((item) => (
                             <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                               <div className="relative w-12 h-12 flex-shrink-0">
-                                <Image
-                                  src={
-                                    item.image && item.image.trim()
-                                      ? item.image.startsWith('http')
-                                        ? item.image.replace(/\\/g, '/')
-                                        : item.image.startsWith('/')
-                                          ? item.image.replace(/\\/g, '/')
-                                          : `http://localhost:8000/${item.image.replace(/\\/g, '/')}`
-                                      : '/images/doc1.webp'
-                                  }
-                                  alt={item.name}
-                                  width={48}
-                                  height={48}
-                                  className="w-12 h-12 object-cover rounded-lg border"
-                                />
+                                
+                                                           <Image
+                                                             src={getImageUrl(item.image ?? '')}
+                                                             alt={item.name}
+                                                             width={80}
+                                                             height={80}
+                                                             className="w-20 h-20 object-cover rounded-xl border"
+                                                             onError={(e) => {
+                                                               const target = e.target as HTMLImageElement;
+                                                               target.style.display = 'none';
+                                                               const fallback = target.parentElement?.querySelector('.image-fallback') as HTMLElement;
+                                                               if (fallback) fallback.style.display = 'flex';
+                                                             }}
+                                                           />
+                               
                               </div>
                               <div className="flex-1 min-w-0">
                                 <h5 className="font-medium text-gray-900 truncate">{item.name}</h5>
