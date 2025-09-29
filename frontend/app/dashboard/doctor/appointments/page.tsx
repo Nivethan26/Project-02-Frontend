@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import Sidebar from '@/components/layout/Sidebar';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -47,7 +49,18 @@ export default function AppointmentPage() {
         <Sidebar role="doctor" />
         <main className="flex-1 ml-64 p-8">
           <div className="max-w-7xl mx-auto">
-            <h1 className="text-4xl font-bold text-black mb-8">SK Medicals Appointments</h1>
+            <div className="space-y-2">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-1 h-8 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full"></div>
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
+                      Manage Your Appointments
+                    </h1>
+                  </div>
+                  <p className="text-gray-600 text-lg font-medium ml-4">
+                    Please plan to arrive on time and keep your appointment. If you are unable to attend, provide a brief reason and then cancel the appointment.
+                  </p>
+                </div>
+            
             <div className="bg-white rounded-lg shadow p-6">
               <div className="mb-4 flex justify-end">
                 <input
@@ -73,6 +86,7 @@ export default function AppointmentPage() {
                         <th className="px-6 py-3 text-left text-sm font-bold text-black uppercase">Date</th>
                         <th className="px-6 py-3 text-left text-sm font-bold text-black uppercase">Time</th>
                         <th className="px-6 py-3 text-left text-sm font-bold text-black uppercase">Status</th>
+                        <th className="px-6 py-3 text-left text-sm font-bold text-black uppercase">Action</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200 text-black">
@@ -111,10 +125,12 @@ export default function AppointmentPage() {
                               ) : (
                                 <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-300 font-semibold">{a.status}</span>
                               )}
+                            </td>
+                            <td className="px-6 py-4">
                               {a.status === 'confirmed' && (
                                 <button
                                   disabled={isPast}
-                                  className={`ml-4 px-4 py-2 rounded-lg font-semibold border-2 transition-all ${isPast
+                                  className={`px-4 py-2 rounded-lg font-semibold border-2 transition-all ${isPast
                                     ? 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'
                                     : 'bg-red-500 text-white border-red-600 hover:bg-red-600 hover:border-red-700'}`}
                                   onClick={() => {

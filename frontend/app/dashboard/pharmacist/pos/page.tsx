@@ -30,15 +30,30 @@ interface CartItem {
 interface Customer {
   name: string;
   phone: string;
-  email: string;
 }
 
 export default function POSPage() {
+  // Validation state
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+
+  // Validation functions
+  const validateName = (name: string) => {
+    if (!name.trim()) return 'Name is required';
+    if (!/^[A-Za-z ]+$/.test(name)) return 'Name must contain only letters and spaces';
+    if (name.trim().length < 2) return 'Name must be at least 2 characters';
+    return null;
+  };
+  const validatePhone = (phone: string) => {
+    if (!phone.trim()) return 'Phone number is required';
+    if (!/^[0-9]{10}$/.test(phone)) return 'Phone number must be 10 digits';
+    return null;
+  };
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [customer, setCustomer] = useState<Customer>({ name: '', phone: '', email: '' });
+  const [customer, setCustomer] = useState<Customer>({ name: '', phone: '' });
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [loading, setLoading] = useState(true);
   const [processingPayment, setProcessingPayment] = useState(false);
@@ -158,7 +173,7 @@ export default function POSPage() {
 
   const clearCart = () => {
     setCart([]);
-    setCustomer({ name: '', phone: '', email: '' });
+    setCustomer({ name: '', phone: '' });
     setPaymentMethod('cash');
   };
 
@@ -193,8 +208,13 @@ export default function POSPage() {
       return;
     }
 
-    if (!customer.name || !customer.phone) {
-      toast.error('Please enter customer information');
+    // Validate name and phone
+    const nameErr = validateName(customer.name);
+    const phoneErr = validatePhone(customer.phone);
+    setNameError(nameErr);
+    setPhoneError(phoneErr);
+    if (nameErr || phoneErr) {
+      toast.error('Please enter valid customer information');
       return;
     }
 
@@ -261,9 +281,9 @@ export default function POSPage() {
             amount: getTotal(),
             paymentType: 'pos'
           });
-          toast.success('Payment recorded in database!');
+          //toast.success('Payment recorded in database!');
         } catch (err) {
-          toast.error('Failed to record payment in database');
+          //toast.error('Failed to record payment in database');
           console.error('Payment record error:', err);
         }
       }
@@ -703,25 +723,35 @@ export default function POSPage() {
                         type="text"
                         placeholder="Customer Name *"
                         value={customer.name}
-                        onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onChange={(e) => {
+                          setCustomer({ ...customer, name: e.target.value });
+                          if (nameError) setNameError(null);
+                        }}
+                        onBlur={(e) => setNameError(validateName(e.target.value))}
+                        className={`w-full px-3 py-2 border ${nameError ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                         required
                       />
+                      {nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
                       <input
                         type="tel"
                         placeholder="Phone Number *"
                         value={customer.phone}
-                        onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onChange={(e) => {
+                          setCustomer({ ...customer, phone: e.target.value });
+                          if (phoneError) setPhoneError(null);
+                        }}
+                        onBlur={(e) => setPhoneError(validatePhone(e.target.value))}
+                        className={`w-full px-3 py-2 border ${phoneError ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                         required
                       />
-                      <input
+                      {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
+                      {/* <input
                         type="email"
                         placeholder="Email (Optional)"
                         value={customer.email}
                         onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
+                      /> */}
                     </div>
                   </div>
 
@@ -734,7 +764,7 @@ export default function POSPage() {
                       Payment Method
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
-                      {['cash', 'card', 'upi', 'bank_transfer'].map((method) => (
+                      {['cash', 'card'].map((method) => (
                         <button
                           key={method}
                           onClick={() => setPaymentMethod(method)}
@@ -810,12 +840,12 @@ export default function POSPage() {
                       </button>
                       
                       {/* Test Backend Connection */}
-                      <button
+                      {/* <button
                         onClick={testBackendConnection}
                         className="w-full bg-yellow-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-yellow-600 transition-colors"
                       >
                         Test Backend Connection
-                      </button>
+                      </button> */}
                     </div>
                   </div>
                 </div>
@@ -826,7 +856,7 @@ export default function POSPage() {
           {/* Receipt Modal */}
           {showReceipt && receiptData && receiptData.orderId && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+              <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
                 <div className="p-6">
                   {/* Receipt Header */}
                   <div className="text-center mb-6 border-b border-gray-200 pb-4">
